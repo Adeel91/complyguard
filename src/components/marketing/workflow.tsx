@@ -1,58 +1,79 @@
 const steps = [
   {
     number: "01",
-    title: "Load the source",
+    title: "Repository",
     description:
-      "ComplyGuard reads the actual project and constructs a TypeScript syntax tree.",
+      "Provide a public GitHub URL or run the local CLI against a project directory.",
   },
   {
     number: "02",
-    title: "Run rule packs",
+    title: "Source graph",
     description:
-      "Framework specific analyzers inspect concrete program structures and security relevant patterns.",
+      "ComplyGuard parses JavaScript and TypeScript into a real AST representation.",
   },
   {
     number: "03",
-    title: "Collect evidence",
+    title: "Rule execution",
     description:
-      "Every finding includes the rule, source file, line, severity, explanation, and remediation.",
+      "Framework specific rules evaluate concrete source patterns and contextual conditions.",
   },
   {
     number: "04",
-    title: "Verify the fix",
+    title: "Evidence",
     description:
-      "Run the scanner again after remediation and verify that the underlying finding disappears.",
+      "Findings return exact source locations, control mappings and actionable remediation.",
   },
 ];
 
 export function Workflow() {
   return (
-    <section id="workflow">
-      <div className="mx-auto max-w-7xl px-6 py-24">
-        <div className="max-w-2xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            Analysis workflow
-          </p>
+    <section
+      id="workflow"
+      className="relative overflow-hidden bg-[#101112] text-white"
+    >
+      <div className="cg-grid-dark absolute inset-0 opacity-40" />
 
-          <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em]">
-            Evidence instead of compliance theater.
-          </h2>
-        </div>
+      <div className="absolute right-[-160px] top-[-160px] size-[500px] rounded-full bg-[#ef3f46]/10 blur-[150px]" />
 
-        <div className="mt-14 grid gap-px overflow-hidden rounded-3xl border bg-border lg:grid-cols-4">
-          {steps.map((step) => (
-            <article key={step.number} className="bg-background p-7">
-              <span className="text-sm font-medium text-muted-foreground">
-                {step.number}
-              </span>
+      <div className="relative mx-auto max-w-[1500px] px-5 py-20 sm:px-8 lg:px-12 lg:py-24">
+        <div className="grid gap-12 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#ff767c]">
+              Pipeline
+            </p>
 
-              <h3 className="mt-12 text-xl font-semibold">{step.title}</h3>
+            <h2 className="mt-4 text-4xl font-semibold leading-[1.02] tracking-[-0.055em]">
+              Source in.
+              Evidence out.
+            </h2>
 
-              <p className="mt-3 leading-7 text-muted-foreground">
-                {step.description}
-              </p>
-            </article>
-          ))}
+            <p className="mt-5 max-w-md text-sm leading-7 text-white/35">
+              No generated compliance theatre.
+              Every stage is inspectable and based on
+              the repository being analyzed.
+            </p>
+          </div>
+
+          <div className="grid gap-px overflow-hidden rounded-[24px] border border-white/[0.08] bg-white/[0.08] md:grid-cols-2">
+            {steps.map((step) => (
+              <div
+                key={step.number}
+                className="min-h-[220px] bg-[#101112] p-6 transition hover:bg-[#161719]"
+              >
+                <div className="text-[9px] font-bold uppercase tracking-[0.13em] text-white/20">
+                  {step.number}
+                </div>
+
+                <h3 className="mt-12 text-lg font-semibold tracking-[-0.035em]">
+                  {step.title}
+                </h3>
+
+                <p className="mt-3 text-sm leading-7 text-white/35">
+                  {step.description}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
