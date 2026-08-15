@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { relative } from "node:path";
+
 import { Command } from "commander";
 
 import { scanProject } from "@/scanner/core/scanner";
@@ -36,14 +38,36 @@ program
       console.log(`Findings: ${result.findings.length}`);
       console.log("");
 
-      if (result.ruleCount === 0) {
-        console.log(
-          "Scanner infrastructure is ready. Compliance rules have not been implemented yet.",
+      if (result.findings.length === 0) {
+        console.log("No findings detected by the active rule set.");
+        return;
+      }
+
+      for (const finding of result.findings) {
+        const file = relative(
+          result.projectPath,
+          finding.location.file,
         );
+
+        console.log(
+          `[${finding.severity.toUpperCase()}] ${finding.ruleId} ${finding.title}`,
+        );
+
+        console.log(
+          `  ${file}:${finding.location.line}:${finding.location.column}`,
+        );
+
+        console.log(`  Control: ${finding.control}`);
+        console.log(`  ${finding.description}`);
+        console.log(`  Evidence: ${finding.evidence}`);
+        console.log(`  Remediation: ${finding.remediation}`);
+        console.log("");
       }
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Unknown scanner error";
+        error instanceof Error
+          ? error.message
+          : "Unknown scanner error";
 
       console.error(message);
       process.exitCode = 1;
