@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ComplyGuard
 
-## Getting Started
+ComplyGuard is a real static analysis application for identifying source code patterns associated with GDPR, SOC 2 and ISO 27001 engineering risks.
 
-First, run the development server:
+ComplyGuard does not certify compliance.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Real TypeScript and JavaScript AST analysis
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+GDPR rule pack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+SOC 2 rule pack
 
-## Learn More
+ISO 27001 rule pack
 
-To learn more about Next.js, take a look at the following resources:
+Exact source evidence
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+File, line and column locations
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Control mappings
 
-## Deploy on Vercel
+Severity levels
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Remediation guidance
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Public GitHub repository scanning
+
+Local CLI scanning
+
+JSON reporting
+
+SARIF reporting
+
+Automated tests
+
+Kiro specs
+
+Kiro steering
+
+Kiro hooks
+
+No findings are hardcoded.
+
+## Technology
+
+Next.js 16
+
+React 19
+
+TypeScript
+
+Tailwind CSS
+
+shadcn UI
+
+Node.js 24
+
+pnpm
+
+ts morph
+
+Zod
+
+Commander
+
+Vitest
+
+## Install
+
+Run pnpm install.
+
+## Web application
+
+Run pnpm dev.
+
+Open http://localhost:3000
+
+## CLI
+
+Scan a project with:
+
+pnpm scan ./path/to/project
+
+## Kiro
+
+The repository contains the Kiro specification, steering files and automation hooks under the .kiro directory.
+
+## Important limitation
+
+ComplyGuard identifies code patterns that may be relevant to compliance controls.
+
+A finding does not prove noncompliance.
+
+A clean scan does not prove compliance.

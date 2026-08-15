@@ -1,0 +1,17 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Verify compliance scanner changes",
+      "description": "Run scanner tests whenever scanner TypeScript files are saved.",
+      "trigger": "PostFileSave",
+      "matcher": "src/scanner/.*\\.ts$",
+      "action": {
+        "type": "command",
+        "command": "pnpm test:run"
+      },
+      "timeout": 60,
+      "enabled": true
+    }
+  ]
+}

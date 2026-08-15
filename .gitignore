@@ -1,18 +1,15 @@
-# Dependencies
 node_modules/
 .pnpm-store/
 
-# Next.js
 .next/
 out/
+.vercel/
 
-# Build output
 dist/
 build/
 coverage/
 *.tsbuildinfo
 
-# Environment files
 .env
 .env.local
 .env.development.local
@@ -20,46 +17,35 @@ coverage/
 .env.production.local
 .env.*.local
 
-# Temporary files
 tmp/
 temp/
 .tmp/
 .temp/
 .cache/
 
-# Logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Operating system
 .DS_Store
 Thumbs.db
 
-# Editors
 .idea/
 .vscode/
 *.swp
 *.swo
 
-# Test artifacts
 test-results/
 playwright-report/
 blob-report/
 
-# Runtime artifacts
 *.pid
 *.seed
 *.pid.lock
 
-# Local certificates and secrets
 *.pem
 *.key
 *.p12
 *.pfx
-*.crt
-
-# Vercel
-.vercel/

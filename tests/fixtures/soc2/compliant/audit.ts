@@ -7,10 +7,10 @@ export async function deleteUser(userId: string) {
   });
 }
 
-async function databaseDelete(_userId: string) {
-  return true;
+async function databaseDelete(userId: string) {
+  return userId.length > 0;
 }
 
-function auditLog(_event: object) {
-  return true;
+function auditLog(event: object) {
+  return Object.keys(event).length > 0;
 }

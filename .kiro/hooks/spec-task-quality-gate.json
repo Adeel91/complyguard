@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Verify completed spec tasks",
+      "description": "Run the project quality gate after a Kiro specification task completes.",
+      "trigger": "PostTaskExec",
+      "action": {
+        "type": "command",
+        "command": "pnpm check"
+      },
+      "timeout": 120,
+      "enabled": true
+    }
+  ]
+}

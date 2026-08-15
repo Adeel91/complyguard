@@ -1,4 +1,4 @@
-import { Node, SyntaxKind } from "ts-morph";
+import { SyntaxKind } from "ts-morph";
 
 import type { ComplianceRule } from "@/scanner/types/rule";
 import { createFinding } from "@/scanner/utils/finding";
