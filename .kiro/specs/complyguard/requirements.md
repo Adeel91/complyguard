@@ -1,24 +1,56 @@
 # ComplyGuard Requirements
 
+## Product mission
+
+ComplyGuard is an evidence first compliance engineering system.
+
+It combines deterministic source analysis with repository intelligence and an optional deep reasoning layer.
+
+It does not provide legal advice or compliance certification.
+
 ## Source ingestion
 
-The system shall analyze real TypeScript and JavaScript projects.
+The system shall analyze real TypeScript and JavaScript repositories.
 
-The local CLI shall accept an actual project directory.
+The CLI shall accept an actual project directory.
 
-The web application shall later support real repository ingestion.
+The web application shall accept public GitHub repository URLs.
 
-## Static analysis
+Downloaded repositories must be processed temporarily and securely.
 
-The scanner shall construct an abstract syntax tree from source code.
+## Deterministic analysis
 
-Compliance rules shall inspect actual syntax tree structures.
+ComplyGuard shall construct a real abstract syntax tree from source code.
 
-The scanner shall report exact files and locations for findings.
+Deterministic rules shall inspect actual syntax structures.
+
+Every deterministic finding must contain exact source evidence.
+
+No finding may exist solely for demonstration purposes.
+
+## Repository intelligence
+
+ComplyGuard shall profile the repository before deep analysis.
+
+The repository profile may identify:
+
+Application frameworks
+
+Authentication technology
+
+Database technology
+
+Payment integrations
+
+Logging systems
+
+Source areas associated with authentication, APIs, databases, payments and security
+
+Risk surfaces must be derived from real repository evidence.
 
 ## Frameworks
 
-The first release shall contain meaningful rule packs for:
+The first release supports:
 
 GDPR
 
@@ -28,7 +60,7 @@ ISO 27001
 
 ## Findings
 
-Every finding shall contain:
+Every deterministic finding shall contain:
 
 Rule identifier
 
@@ -52,24 +84,72 @@ Column
 
 Remediation guidance
 
+## Engineering posture
+
+ComplyGuard may calculate an observed engineering posture from deterministic findings.
+
+The methodology must be transparent.
+
+The score must never be presented as certification or proof of compliance.
+
+No random or fabricated score is allowed.
+
+## Deep Review
+
+A Deep Review may use Kiro as a reasoning layer.
+
+Kiro receives only real deterministic findings, repository intelligence and relevant source context.
+
+Kiro may:
+
+Confirm a finding
+
+Mark a finding as likely
+
+Reject a false positive
+
+Mark a finding as requiring human review
+
+Explain technical reasoning
+
+Explain business or audit impact
+
+Create remediation steps
+
+Suggest a patch when sufficient context exists
+
+Kiro must not invent repository findings or source evidence.
+
+## Verification loop
+
+Future remediation workflow:
+
+Deterministic scan
+
+Repository intelligence
+
+Kiro Deep Review
+
+Developer approved remediation
+
+Deterministic rescan
+
+Compare observed posture before and after
+
 ## Interfaces
 
-The same scanner engine shall power both the CLI and web application.
+The same deterministic scanner engine powers CLI and web.
 
-The CLI shall support machine readable JSON output.
+The CLI supports JSON output.
 
-The application shall later support SARIF output.
+The application supports SARIF output.
 
-## Accuracy
+## Quality
 
-No finding may be generated solely for demonstration purposes.
+Every deterministic rule requires vulnerable and safe tests.
 
-No compliance score may be fabricated.
+Repository intelligence requires automated tests.
 
-Every scanner rule shall have tests showing vulnerable and safe examples.
+Deep Review contracts require automated tests.
 
-## Product positioning
-
-ComplyGuard detects software patterns associated with compliance risk.
-
-It does not provide legal advice or compliance certification.
+Type checking, linting, tests and production build must pass before submission.

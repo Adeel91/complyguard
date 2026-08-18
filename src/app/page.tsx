@@ -1,25 +1,13 @@
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
-import { Capabilities } from "@/components/marketing/capabilities";
-import { CTA } from "@/components/marketing/cta";
-import { Frameworks } from "@/components/marketing/frameworks";
-import { Hero } from "@/components/marketing/hero";
-import { Workflow } from "@/components/marketing/workflow";
+import { HomeExperience } from "@/components/marketing/home-experience";
 
 export default function HomePage() {
   return (
-    <>
+    <main className="min-h-screen">
       <SiteHeader />
-
-      <main>
-        <Hero />
-        <Capabilities />
-        <Frameworks />
-        <Workflow />
-        <CTA />
-      </main>
-
+      <HomeExperience />
       <SiteFooter />
-    </>
+    </main>
   );
 }

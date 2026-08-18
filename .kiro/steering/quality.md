@@ -2,16 +2,36 @@
 
 Use strict TypeScript.
 
-Never use any unless unavoidable and documented.
+Avoid any.
 
-Validate external input.
+Validate all external input.
 
-Every compliance rule requires automated positive and negative test cases.
+Never fabricate findings.
 
-Every scanner finding requires exact source location information.
+Never fabricate source evidence.
 
-The project must pass type checking, linting, tests, and production build before submission.
+Never fabricate compliance status.
 
-Do not present incomplete functionality as working functionality.
+Every deterministic rule requires positive and negative tests.
+
+Repository intelligence must be evidence based.
+
+Deep Review must operate only on supplied repository evidence.
+
+False positives must be rejectable.
+
+Every finding requires exact source location information.
+
+Every remediation must remain advisory until verified by deterministic rescan.
+
+The project must pass:
+
+pnpm typecheck
+
+pnpm lint
+
+pnpm test:run
+
+pnpm build
 
 Security and compliance claims must be precise and evidence based.

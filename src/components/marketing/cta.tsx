@@ -1,30 +1,31 @@
 import Link from "next/link";
 
-export function CTA() {
+export function Cta() {
   return (
-    <section className="bg-[#ef3f46]">
-      <div className="mx-auto max-w-[1500px] px-5 py-16 sm:px-8 lg:px-12">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-white/60">
-              Real repository analysis
-            </p>
-
-            <h2 className="mt-3 max-w-3xl text-3xl font-semibold leading-[1.05] tracking-[-0.05em] text-white sm:text-4xl">
-              Put actual source code under the scanner.
-            </h2>
-          </div>
-
-          <Link
-            href="/scan"
-            className="inline-flex h-12 items-center justify-center rounded-xl bg-white px-6 text-sm font-semibold text-black transition hover:bg-white/90"
-          >
-            Open scanner
-            <span className="ml-2">
-              →
-            </span>
-          </Link>
+    <section className="border-b border-white/[0.08]">
+      <div className="cg-container border-x border-white/[0.08] px-8 py-24 text-center md:px-14 md:py-28">
+        <div className="cg-eyebrow justify-center">
+          Inspect real source
         </div>
+
+        <h2 className="cg-display mx-auto mt-8 max-w-[860px] text-[42px] text-white md:text-[55px]">
+          Put a real repository
+          <br />
+          <span className="text-white/30">
+            under evidence.
+          </span>
+        </h2>
+
+        <p className="mx-auto mt-7 max-w-[650px] text-[14px] leading-7 text-white/44">
+          No generated findings. No fake compliance status. Every deterministic result starts from source code.
+        </p>
+
+        <Link
+          href="/scan"
+          className="cg-primary mt-9"
+        >
+          Open repository scanner →
+        </Link>
       </div>
     </section>
   );

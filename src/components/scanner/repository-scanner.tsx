@@ -1,934 +1,1765 @@
 "use client";
 
-import { useState } from "react";
+import {
+  useMemo,
+  useState,
+} from "react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  AnimatePresence,
+  motion,
+} from "motion/react";
+
 import type {
   ComplianceFinding,
   ComplianceFramework,
   FindingSeverity,
 } from "@/scanner/types/finding";
 
-type WebFinding = Omit<
-  ComplianceFinding,
-  "location"
-> & {
-  location: {
+type Technology = {
+  name: string;
+  category: string;
+  evidence?: string;
+};
+
+type RiskSurface = {
+  id: string;
+  label: string;
+  reasons: string[];
+};
+
+type RepositoryProfile = {
+  primaryLanguage:
+    | "typescript"
+    | "javascript"
+    | "mixed"
+    | "unknown";
+
+  sourceFileCount: number;
+
+  technologies:
+    Technology[];
+
+  riskSurfaces:
+    RiskSurface[];
+};
+
+type FrameworkPosture = {
+  framework:
+    ComplianceFramework;
+
+  score: number;
+  findingCount: number;
+  weightedRisk: number;
+  criticalCount: number;
+  highCount: number;
+};
+
+type Posture = {
+  score: number;
+
+  frameworks:
+    FrameworkPosture[];
+
+  methodology: string;
+  disclaimer: string;
+};
+
+type RootRisk = {
+  id: string;
+  title: string;
+  severity:
+    FindingSeverity;
+  category: string;
+
+  evidence: {
     file: string;
     line: number;
     column: number;
+    snippets: string[];
   };
+
+  controls: Array<{
+    framework:
+      ComplianceFramework;
+    control: string;
+    ruleIds: string[];
+  }>;
+
+  signalCount: number;
+};
+
+type Intelligence = {
+  repositoryProfile:
+    RepositoryProfile;
+
+  rootRisks:
+    RootRisk[];
+
+  posture:
+    Posture;
+
+  report?: unknown;
 };
 
 type ScanResponse = {
-  repository: {
-    owner: string;
-    name: string;
-    branch: string;
-    url: string;
-  };
-  frameworks: ComplianceFramework[];
   sourceFileCount: number;
   ruleCount: number;
-  findingCount: number;
-  findings: WebFinding[];
-  sarif: unknown;
+
+  findings:
+    ComplianceFinding[];
+
+  frameworks:
+    ComplianceFramework[];
+
+  sarif?: unknown;
+
+  intelligence?:
+    Intelligence;
+
+  repository?: unknown;
 };
 
-const FRAMEWORKS: Array<{
-  id: ComplianceFramework;
+const availableFrameworks: Array<{
+  id:
+    ComplianceFramework;
   label: string;
-  short: string;
 }> = [
   {
     id: "gdpr",
     label: "GDPR",
-    short: "Privacy engineering",
   },
   {
     id: "soc2",
     label: "SOC 2",
-    short: "Security controls",
   },
   {
     id: "iso27001",
     label: "ISO 27001",
-    short: "Information security",
   },
 ];
 
-const SEVERITIES: Array<{
-  id: FindingSeverity;
-  label: string;
-}> = [
-  {
-    id: "critical",
-    label: "Critical",
-  },
-  {
-    id: "high",
-    label: "High",
-  },
-  {
-    id: "medium",
-    label: "Medium",
-  },
-  {
-    id: "low",
-    label: "Low",
-  },
-  {
-    id: "info",
-    label: "Info",
-  },
-];
+const frameworkLabels: Record<
+  ComplianceFramework,
+  string
+> = {
+  gdpr: "GDPR",
+  soc2: "SOC 2",
+  iso27001:
+    "ISO 27001",
+};
 
-function downloadJson(
-  filename: string,
-  value: unknown,
-) {
-  const blob = new Blob(
-    [JSON.stringify(value, null, 2)],
-    {
-      type: "application/json",
-    },
-  );
+const severityRank: Record<
+  FindingSeverity,
+  number
+> = {
+  critical: 5,
+  high: 4,
+  medium: 3,
+  low: 2,
+  info: 1,
+};
 
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-
-  URL.revokeObjectURL(url);
-}
-
-function severityClasses(
-  severity: FindingSeverity,
-) {
-  switch (severity) {
-    case "critical":
-      return {
-        dot: "bg-[#ef3f46]",
-        badge:
-          "border-[#ef3f46]/20 bg-[#ef3f46]/[0.08] text-[#d93038]",
-      };
-
-    case "high":
-      return {
-        dot: "bg-orange-500",
-        badge:
-          "border-orange-500/20 bg-orange-500/[0.08] text-orange-700",
-      };
-
-    case "medium":
-      return {
-        dot: "bg-amber-400",
-        badge:
-          "border-amber-400/20 bg-amber-400/[0.09] text-amber-700",
-      };
-
-    default:
-      return {
-        dot: "bg-black/35",
-        badge:
-          "border-black/10 bg-black/[0.035] text-black/55",
-      };
-  }
-}
+const severityColors: Record<
+  FindingSeverity,
+  string
+> = {
+  critical: "#f27484",
+  high: "#e6a36d",
+  medium: "#d8c678",
+  low: "#77acff",
+  info: "#938c99",
+};
 
 export function RepositoryScanner() {
-  const [repositoryUrl, setRepositoryUrl] =
+  const [
+    repositoryUrl,
+    setRepositoryUrl,
+  ] =
     useState("");
 
-  const [frameworks, setFrameworks] =
-    useState<ComplianceFramework[]>([
-      "gdpr",
-      "soc2",
-      "iso27001",
-    ]);
+  const [
+    enabledFrameworks,
+    setEnabledFrameworks,
+  ] = useState<
+    ComplianceFramework[]
+  >([
+    "gdpr",
+    "soc2",
+    "iso27001",
+  ]);
 
-  const [result, setResult] =
-    useState<ScanResponse | null>(null);
+  const [
+    result,
+    setResult,
+  ] =
+    useState<ScanResponse | null>(
+      null,
+    );
 
-  const [error, setError] =
-    useState("");
-
-  const [loading, setLoading] =
+  const [
+    loading,
+    setLoading,
+  ] =
     useState(false);
 
   const [
-    filterFramework,
-    setFilterFramework,
+    error,
+    setError,
+  ] =
+    useState<string | null>(
+      null,
+    );
+
+  const [
+    frameworkFilter,
+    setFrameworkFilter,
   ] = useState<
     ComplianceFramework | "all"
   >("all");
 
   const [
-    filterSeverity,
-    setFilterSeverity,
+    severityFilter,
+    setSeverityFilter,
   ] = useState<
     FindingSeverity | "all"
   >("all");
 
   function toggleFramework(
-    framework: ComplianceFramework,
+    framework:
+      ComplianceFramework,
   ) {
-    setFrameworks((current) => {
-      if (current.includes(framework)) {
-        if (current.length === 1) {
-          return current;
+    setEnabledFrameworks(
+      (
+        current,
+      ) => {
+        if (
+          current.includes(
+            framework,
+          )
+        ) {
+          if (
+            current.length ===
+            1
+          ) {
+            return current;
+          }
+
+          return current.filter(
+            (
+              item,
+            ) =>
+              item !==
+              framework,
+          );
         }
 
-        return current.filter(
-          (item) =>
-            item !== framework,
-        );
-      }
-
-      return [
-        ...current,
-        framework,
-      ];
-    });
+        return [
+          ...current,
+          framework,
+        ];
+      },
+    );
   }
 
   async function runScan() {
+    if (
+      repositoryUrl.trim() ===
+      ""
+    ) {
+      setError(
+        "Enter a public GitHub repository URL.",
+      );
+
+      return;
+    }
+
     setLoading(true);
-    setError("");
+    setError(null);
     setResult(null);
-    setFilterFramework("all");
-    setFilterSeverity("all");
 
     try {
       const response =
-        await fetch("/api/scan", {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
+        await fetch(
+          "/api/scan",
+          {
+            method:
+              "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                repositoryUrl:
+                  repositoryUrl.trim(),
+
+                frameworks:
+                  enabledFrameworks,
+              }),
           },
-          body: JSON.stringify({
-            repositoryUrl,
-            frameworks,
-          }),
-        });
+        );
 
       const payload =
-        await response.json();
+        (await response.json()) as
+          | ScanResponse
+          | {
+              message?: string;
+              error?: string;
+            };
 
-      if (!response.ok) {
+      if (
+        !response.ok
+      ) {
+        let message =
+          "Repository scan failed.";
+
+        if (
+          "message" in
+            payload &&
+          typeof payload.message ===
+            "string"
+        ) {
+          message =
+            payload.message;
+        } else if (
+          "error" in
+            payload &&
+          typeof payload.error ===
+            "string"
+        ) {
+          message =
+            payload.error;
+        }
+
         throw new Error(
-          payload.error ??
-            "Scan failed.",
+          message,
         );
       }
 
       setResult(
         payload as ScanResponse,
       );
-    } catch (scanError) {
+    } catch (
+      scanError
+    ) {
       setError(
-        scanError instanceof Error
+        scanError instanceof
+          Error
           ? scanError.message
-          : "Scan failed.",
+          : "Repository scan failed.",
       );
     } finally {
       setLoading(false);
     }
   }
 
-  const visibleFindings =
-    (result?.findings ?? []).filter(
-      (finding) => {
-        if (
-          filterFramework !== "all" &&
-          finding.framework !==
-            filterFramework
-        ) {
-          return false;
-        }
+  const filteredFindings =
+    useMemo(() => {
+      if (!result) {
+        return [];
+      }
 
-        if (
-          filterSeverity !== "all" &&
-          finding.severity !==
-            filterSeverity
-        ) {
-          return false;
-        }
+      return [
+        ...result.findings,
+      ]
+        .filter(
+          (
+            finding,
+          ) =>
+            frameworkFilter ===
+              "all" ||
+            finding.framework ===
+              frameworkFilter,
+        )
+        .filter(
+          (
+            finding,
+          ) =>
+            severityFilter ===
+              "all" ||
+            finding.severity ===
+              severityFilter,
+        )
+        .sort(
+          (
+            left,
+            right,
+          ) =>
+            severityRank[
+              right.severity
+            ] -
+            severityRank[
+              left.severity
+            ],
+        );
+    }, [
+      result,
+      frameworkFilter,
+      severityFilter,
+    ]);
 
-        return true;
-      },
+  function download(
+    filename: string,
+    content: string,
+  ) {
+    const blob =
+      new Blob(
+        [
+          content,
+        ],
+        {
+          type:
+            "application/json",
+        },
+      );
+
+    const url =
+      URL.createObjectURL(
+        blob,
+      );
+
+    const anchor =
+      document.createElement(
+        "a",
+      );
+
+    anchor.href = url;
+    anchor.download =
+      filename;
+
+    document.body.appendChild(
+      anchor,
     );
 
-  const presentFrameworks =
-    new Set(
-      result?.findings.map(
-        (finding) =>
-          finding.framework,
-      ),
+    anchor.click();
+    anchor.remove();
+
+    URL.revokeObjectURL(
+      url,
     );
-
-  const presentSeverities =
-    new Set(
-      result?.findings.map(
-        (finding) =>
-          finding.severity,
-      ),
-    );
-
-  const criticalCount =
-    result?.findings.filter(
-      (finding) =>
-        finding.severity ===
-        "critical",
-    ).length ?? 0;
-
-  const highCount =
-    result?.findings.filter(
-      (finding) =>
-        finding.severity === "high",
-    ).length ?? 0;
+  }
 
   return (
-    <div className="space-y-7">
-      <div className="cg-shadow overflow-hidden rounded-[30px] border border-black/[0.08] bg-white">
-        <div className="grid lg:grid-cols-[1fr_340px]">
-          <div className="p-6 sm:p-8 lg:p-10">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-2xl bg-[#111214] text-xs font-black text-white">
-                GH
-              </div>
+    <section className="pb-32">
+      <div className="cg-container">
+        <div className="py-10 md:py-14">
+          <div className="text-[10px] uppercase tracking-[0.1em] text-white/23">
+            Analysis flow
+          </div>
 
-              <div>
-                <h2 className="text-lg font-semibold tracking-[-0.035em]">
-                  Public GitHub repository
-                </h2>
+          <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3 text-[11px]">
+            <span className="text-white/60">
+              GitHub repository
+            </span>
 
-                <p className="mt-0.5 text-xs text-black/40">
-                  Default branch • temporary processing
-                </p>
-              </div>
-            </div>
+            <span className="text-[#a98cff]/55">
+              →
+            </span>
 
-            <div className="mt-7">
-              <label
-                htmlFor="repository"
-                className="text-xs font-bold uppercase tracking-[0.13em] text-black/40"
-              >
+            <span className="text-white/42">
+              repository profile
+            </span>
+
+            <span className="text-[#a98cff]/55">
+              →
+            </span>
+
+            <span className="text-white/42">
+              AST analysis
+            </span>
+
+            <span className="text-[#a98cff]/55">
+              →
+            </span>
+
+            <span className="text-white/42">
+              root risk correlation
+            </span>
+
+            <span className="text-[#a98cff]/55">
+              →
+            </span>
+
+            <span className="text-white/42">
+              control mapping
+            </span>
+          </div>
+
+          <div className="mt-10 h-px bg-gradient-to-r from-white/[0.09] via-white/[0.05] to-transparent" />
+
+          <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_340px] lg:items-start">
+            <div>
+              <label className="text-[11px] uppercase tracking-[0.09em] text-white/30">
                 Repository URL
               </label>
 
-              <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-                <Input
-                  id="repository"
-                  value={repositoryUrl}
-                  onChange={(event) =>
+              <div className="mt-3 flex flex-col gap-5 sm:flex-row sm:items-end">
+                <input
+                  value={
+                    repositoryUrl
+                  }
+                  onChange={(
+                    event,
+                  ) =>
                     setRepositoryUrl(
-                      event.target.value,
+                      event
+                        .target
+                        .value,
                     )
                   }
+                  onKeyDown={(
+                    event,
+                  ) => {
+                    if (
+                      event.key ===
+                        "Enter" &&
+                      !loading
+                    ) {
+                      void runScan();
+                    }
+                  }}
+                  className="cg-input-line flex-1"
                   placeholder="https://github.com/owner/repository"
-                  className="h-14 flex-1 rounded-2xl border-black/10 bg-[#f8f8f6] px-5 text-sm shadow-none focus-visible:ring-[#ef3f46]/20"
+                  aria-label="Public GitHub repository URL"
                 />
 
-                <Button
+                <button
                   type="button"
-                  onClick={runScan}
-                  disabled={
-                    loading ||
-                    repositoryUrl
-                      .trim()
-                      .length === 0
+                  onClick={() =>
+                    void runScan()
                   }
-                  className="h-14 min-w-[170px] rounded-2xl bg-[#ef3f46] px-6 font-semibold text-white shadow-[0_10px_26px_rgba(239,63,70,0.2)] hover:bg-[#d93038]"
+                  disabled={
+                    loading
+                  }
+                  className="cg-primary shrink-0 sm:mb-[3px] disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   {loading
-                    ? "Scanning..."
-                    : "Run scan →"}
-                </Button>
+                    ? "Analyzing"
+                    : "Run analysis →"}
+                </button>
+              </div>
+
+              <div className="mt-5 grid gap-5 text-[11px] leading-5 text-white/27 md:grid-cols-2">
+                <div>
+                  <span className="text-white/48">
+                    Supported source
+                  </span>
+
+                  <p className="mt-1">
+                    TypeScript, TSX, JavaScript and JSX files are analyzed by
+                    the current scanner.
+                  </p>
+                </div>
+
+                <div>
+                  <span className="text-white/48">
+                    Temporary processing
+                  </span>
+
+                  <p className="mt-1">
+                    The GitHub archive is downloaded into temporary storage,
+                    analyzed and cleaned up after the request completes.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-7 flex items-start gap-3 border-l border-[#a98cff]/45 pl-4">
+                <span className="mt-[2px] text-[11px] text-[#a98cff]">
+                  25 MB
+                </span>
+
+                <p className="max-w-[760px] text-[11px] leading-5 text-white/31">
+                  Hosted scans accept GitHub repository archives up to 25 MB.
+                  This protects the hosted service from unexpectedly large
+                  downloads, extraction and AST workloads. Larger repositories
+                  can use the same deterministic scanner locally with{" "}
+                  <code className="text-[#7fe1cf]/70">
+                    pnpm scan ./path/to/project
+                  </code>
+                  .
+                </p>
               </div>
             </div>
 
-            {error ? (
-              <div className="mt-5 flex items-start gap-3 rounded-2xl border border-[#ef3f46]/20 bg-[#ef3f46]/[0.055] p-4">
-                <div className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg bg-[#ef3f46]/10 text-xs font-black text-[#d93038]">
-                  !
-                </div>
-
-                <p className="text-sm leading-6 text-[#b52f35]">
-                  {error}
-                </p>
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.09em] text-white/30">
+                Rule packs
               </div>
-            ) : null}
-          </div>
 
-          <div className="border-t border-black/[0.07] bg-[#f8f8f6] p-6 sm:p-8 lg:border-l lg:border-t-0">
-            <p className="text-xs font-bold uppercase tracking-[0.13em] text-black/40">
-              Analyze against
-            </p>
+              <p className="mt-3 text-[11px] leading-5 text-white/27">
+                Choose which engineering control rule packs should execute.
+                Selecting a framework does not mean ComplyGuard is performing
+                a legal compliance audit.
+              </p>
 
-            <div className="mt-4 space-y-2">
-              {FRAMEWORKS.map(
-                (framework) => {
-                  const checked =
-                    frameworks.includes(
-                      framework.id,
-                    );
+              <div className="mt-5 flex flex-wrap gap-7">
+                {availableFrameworks.map(
+                  (
+                    framework,
+                  ) => {
+                    const active =
+                      enabledFrameworks.includes(
+                        framework.id,
+                      );
 
-                  return (
-                    <label
-                      key={
-                        framework.id
-                      }
-                      className={[
-                        "flex cursor-pointer items-center gap-3 rounded-2xl border p-4 transition",
-                        checked
-                          ? "border-black bg-[#111214] text-white shadow-sm"
-                          : "border-black/[0.08] bg-white text-black hover:border-black/20",
-                      ].join(" ")}
-                    >
-                      <input
-                        type="checkbox"
-                        className="sr-only"
-                        checked={
-                          checked
+                    return (
+                      <button
+                        key={
+                          framework.id
                         }
-                        onChange={() =>
+                        type="button"
+                        data-active={
+                          active
+                        }
+                        onClick={() =>
                           toggleFramework(
                             framework.id,
                           )
                         }
-                      />
-
-                      <div
-                        className={[
-                          "flex size-7 shrink-0 items-center justify-center rounded-lg border text-[10px] font-black",
-                          checked
-                            ? "border-white/20 bg-white/10 text-white"
-                            : "border-black/10 bg-black/[0.03] text-black/40",
-                        ].join(" ")}
+                        className="cg-framework-toggle"
                       >
-                        {checked
-                          ? "✓"
-                          : ""}
-                      </div>
-
-                      <div>
-                        <div className="text-sm font-semibold">
-                          {
-                            framework.label
-                          }
-                        </div>
-
-                        <div
-                          className={[
-                            "mt-0.5 text-[10px]",
-                            checked
-                              ? "text-white/40"
-                              : "text-black/35",
-                          ].join(
-                            " ",
-                          )}
-                        >
-                          {
-                            framework.short
-                          }
-                        </div>
-                      </div>
-                    </label>
-                  );
-                },
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="cg-shadow relative overflow-hidden rounded-[30px] border border-black/[0.08] bg-[#111214] p-8 text-white">
-          <div className="cg-scan-line" />
-
-          <div className="flex items-center gap-4">
-            <div className="relative flex size-12 items-center justify-center">
-              <div className="absolute inset-0 rounded-full border border-[#ef3f46]/30" />
-              <div className="absolute inset-2 animate-ping rounded-full bg-[#ef3f46]/20" />
-              <div className="relative size-2.5 rounded-full bg-[#ef3f46]" />
-            </div>
-
-            <div>
-              <h3 className="font-semibold">
-                Analyzing repository
-              </h3>
-
-              <p className="mt-1 text-sm text-white/40">
-                Downloading source,
-                parsing AST and executing
-                the selected rule packs.
-              </p>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {result ? (
-        <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            {[
-              {
-                value:
-                  result.sourceFileCount,
-                label: "Source files",
-              },
-              {
-                value:
-                  result.ruleCount,
-                label: "Rules executed",
-              },
-              {
-                value:
-                  result.findingCount,
-                label: "Findings",
-              },
-              {
-                value:
-                  criticalCount,
-                label: "Critical",
-              },
-              {
-                value:
-                  highCount,
-                label: "High",
-              },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className="rounded-[22px] border border-black/[0.08] bg-white p-5 shadow-sm"
-              >
-                <div className="text-3xl font-semibold tracking-[-0.055em]">
-                  {stat.value}
-                </div>
-
-                <div className="mt-2 text-xs font-medium text-black/35">
-                  {stat.label}
-                </div>
+                        {
+                          framework.label
+                        }
+                      </button>
+                    );
+                  },
+                )}
               </div>
-            ))}
+
+              <div className="mt-7 space-y-4 text-[10px] leading-5">
+                <FrameworkExplanation
+                  label="GDPR"
+                  description="Privacy and personal data related engineering signals."
+                />
+
+                <FrameworkExplanation
+                  label="SOC 2"
+                  description="Security, access, logging and operational control signals."
+                />
+
+                <FrameworkExplanation
+                  label="ISO 27001"
+                  description="Information security engineering signals mapped to relevant controls."
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="cg-shadow overflow-hidden rounded-[30px] border border-black/[0.08] bg-white">
-            <div className="flex flex-col gap-5 border-b border-black/[0.07] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
-              <div className="flex items-center gap-4">
-                <div className="flex size-12 items-center justify-center rounded-2xl bg-[#111214] text-xs font-black text-white">
-                  GH
-                </div>
+          <div className="mt-12 h-px bg-gradient-to-r from-white/[0.09] via-white/[0.05] to-transparent" />
+
+          <div className="mt-9 grid gap-8 md:grid-cols-3">
+            <ScanOutput
+              number="01"
+              title="Repository profile"
+              text="Detected technologies and engineering risk surfaces provide context around the scan."
+            />
+
+            <ScanOutput
+              number="02"
+              title="Root risks"
+              text="Repeated framework signals are correlated into the underlying engineering problem where possible."
+            />
+
+            <ScanOutput
+              number="03"
+              title="Source evidence"
+              text="Every deterministic finding keeps its rule, framework, file, source location, evidence and remediation."
+            />
+          </div>
+        </div>
+
+        <AnimatePresence
+          mode="wait"
+        >
+          {error && (
+            <motion.div
+              key="error"
+              initial={{
+                opacity: 0,
+                y: 8,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              exit={{
+                opacity: 0,
+              }}
+              className="py-10"
+            >
+              <div className="flex max-w-[900px] items-start gap-4">
+                <span className="mt-[6px] h-2 w-2 shrink-0 rounded-full bg-[#f27484] shadow-[0_0_12px_rgba(242,116,132,.7)]" />
 
                 <div>
-                  <p className="text-base font-semibold tracking-[-0.03em]">
-                    {
-                      result.repository
-                        .owner
-                    }
-                    /
-                    {
-                      result.repository
-                        .name
-                    }
+                  <div className="text-[11px] uppercase tracking-[0.09em] text-[#f27484]">
+                    Analysis could not start
+                  </div>
+
+                  <p className="mt-3 text-[13px] leading-6 text-white/57">
+                    {error}
                   </p>
 
-                  <div className="mt-1 flex items-center gap-2 text-xs text-black/35">
-                    <span>
-                      Branch
-                    </span>
-                    <span className="rounded-md bg-black/[0.045] px-2 py-1 font-mono">
+                  {error.includes("25 MB") && (
+                    <div className="mt-5 text-[11px] leading-6 text-white/29">
+                      The hosted limit applies to the downloaded GitHub archive,
+                      not only to TypeScript or JavaScript source. Large assets,
+                      fixtures or other repository files can therefore push an
+                      otherwise scannable project above the hosted limit.
+                      <br />
+                      <br />
+                      For a larger repository, run the same scanner locally:
+                      {" "}
+                      <code className="text-[#7fe1cf]/72">
+                        pnpm scan ./path/to/project
+                      </code>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {loading && (
+            <LoadingExperience
+              key="loading"
+            />
+          )}
+
+          {result &&
+            !loading && (
+              <motion.div
+                key="result"
+                initial={{
+                  opacity: 0,
+                  y: 20,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  duration: 0.55,
+                }}
+              >
+                <Results
+                  result={
+                    result
+                  }
+                  findings={
+                    filteredFindings
+                  }
+                  frameworkFilter={
+                    frameworkFilter
+                  }
+                  severityFilter={
+                    severityFilter
+                  }
+                  setFrameworkFilter={
+                    setFrameworkFilter
+                  }
+                  setSeverityFilter={
+                    setSeverityFilter
+                  }
+                  exportJson={() =>
+                    download(
+                      "complyguard-report.json",
+                      JSON.stringify(
+                        result,
+                        null,
+                        2,
+                      ),
+                    )
+                  }
+                  exportSarif={() => {
+                    if (
+                      result.sarif !=
+                      null
+                    ) {
+                      download(
+                        "complyguard-report.sarif",
+                        JSON.stringify(
+                          result.sarif,
+                          null,
+                          2,
+                        ),
+                      );
+                    }
+                  }}
+                />
+              </motion.div>
+            )}
+        </AnimatePresence>
+      </div>
+    </section>
+  );
+}
+
+function FrameworkExplanation({
+  label,
+  description,
+}: {
+  label: string;
+  description: string;
+}) {
+  return (
+    <div className="grid grid-cols-[86px_1fr] gap-4">
+      <span className="font-semibold text-white/55">
+        {label}
+      </span>
+
+      <span className="text-white/25">
+        {description}
+      </span>
+    </div>
+  );
+}
+
+function ScanOutput({
+  number,
+  title,
+  text,
+}: {
+  number: string;
+  title: string;
+  text: string;
+}) {
+  return (
+    <div>
+      <div className="text-[10px] text-[#a98cff]/60">
+        {number}
+      </div>
+
+      <div className="mt-3 text-[13px] font-semibold text-white/68">
+        {title}
+      </div>
+
+      <p className="mt-2 max-w-[380px] text-[11px] leading-5 text-white/26">
+        {text}
+      </p>
+    </div>
+  );
+}
+
+function LoadingExperience() {
+  const stages = [
+    "temporary repository ingestion",
+    "repository profiling",
+    "deterministic AST analysis",
+    "root risk correlation",
+    "control mapping",
+  ];
+
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+      }}
+      animate={{
+        opacity: 1,
+      }}
+      exit={{
+        opacity: 0,
+      }}
+      className="py-20"
+    >
+      <div className="text-[11px] uppercase tracking-[0.1em] text-[#a98cff]">
+        analysis running
+      </div>
+
+      <div className="mt-5 text-[32px] font-bold tracking-[-0.05em] text-white md:text-[44px]">
+        Building the evidence graph…
+      </div>
+
+      <div className="mt-10 h-px overflow-hidden bg-white/[0.07]">
+        <motion.div
+          className="h-full w-[34%] bg-gradient-to-r from-transparent via-[#a98cff] to-transparent"
+          animate={{
+            x: [
+              "-120%",
+              "340%",
+            ],
+          }}
+          transition={{
+            duration: 1.8,
+            repeat:
+              Infinity,
+            ease:
+              "easeInOut",
+          }}
+        />
+      </div>
+
+      <div className="mt-9 flex flex-wrap gap-x-10 gap-y-4">
+        {stages.map(
+          (
+            stage,
+            index,
+          ) => (
+            <motion.div
+              key={stage}
+              animate={{
+                opacity: [
+                  0.22,
+                  0.8,
+                  0.22,
+                ],
+              }}
+              transition={{
+                duration: 2,
+                repeat:
+                  Infinity,
+                delay:
+                  index *
+                  0.22,
+              }}
+              className="text-[11px] text-white/42"
+            >
+              0
+              {index + 1}
+              {"  "}
+              {stage}
+            </motion.div>
+          ),
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+function Results({
+  result,
+  findings,
+  frameworkFilter,
+  severityFilter,
+  setFrameworkFilter,
+  setSeverityFilter,
+  exportJson,
+  exportSarif,
+}: {
+  result:
+    ScanResponse;
+
+  findings:
+    ComplianceFinding[];
+
+  frameworkFilter:
+    ComplianceFramework
+    | "all";
+
+  severityFilter:
+    FindingSeverity
+    | "all";
+
+  setFrameworkFilter:
+    (
+      value:
+        ComplianceFramework
+        | "all",
+    ) => void;
+
+  setSeverityFilter:
+    (
+      value:
+        FindingSeverity
+        | "all",
+    ) => void;
+
+  exportJson:
+    () => void;
+
+  exportSarif:
+    () => void;
+}) {
+  const rootRisks =
+    result.intelligence
+      ?.rootRisks ??
+    [];
+
+  const score =
+    result.intelligence
+      ?.posture.score;
+
+  return (
+    <div className="pt-12">
+      <div className="cg-fade-line" />
+
+      <div className="grid gap-8 py-10 lg:grid-cols-[1fr_auto] lg:items-end">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.1em] text-[#7fe1cf]/70">
+            Analysis complete
+          </div>
+
+          <p className="mt-3 max-w-[760px] text-[12px] leading-6 text-white/33">
+            Raw signals are individual deterministic rule matches. Root risks
+            correlate related signals where they point to the same underlying
+            engineering problem.
+          </p>
+        </div>
+
+        <p className="max-w-[390px] text-[10px] leading-5 text-white/20">
+          A clean result only means the active rules did not match the analyzed
+          source. It does not prove security or regulatory compliance.
+        </p>
+      </div>
+
+      <div className="grid gap-y-10 pb-12 sm:grid-cols-2 lg:grid-cols-5">
+        <Metric
+          label="Source files"
+          value={
+            result.sourceFileCount
+          }
+        />
+
+        <Metric
+          label="Rules"
+          value={
+            result.ruleCount
+          }
+        />
+
+        <Metric
+          label="Raw signals"
+          value={
+            result.findings.length
+          }
+        />
+
+        <Metric
+          label="Root risks"
+          value={
+            rootRisks.length
+          }
+        />
+
+        <Metric
+          label="Observed posture"
+          value={
+            score ==
+            null
+              ? "—"
+              : `${score}`
+          }
+        />
+      </div>
+
+      <div className="cg-fade-line" />
+
+      {result.intelligence && (
+        <>
+          <RepositoryProfileView
+            intelligence={
+              result.intelligence
+            }
+          />
+
+          <RootRiskView
+            risks={
+              rootRisks
+            }
+          />
+        </>
+      )}
+
+      <div className="py-24">
+        <div className="flex flex-col gap-10 xl:flex-row xl:items-end xl:justify-between">
+          <div>
+            <div className="cg-eyebrow">
+              Source evidence
+            </div>
+
+            <h2 className="cg-heading mt-6 text-[38px] text-white md:text-[48px]">
+              Deterministic
+              <span className="text-white/27">
+                {" "}
+                findings.
+              </span>
+            </h2>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-[11px]">
+            <FilterSet
+              values={[
+                "all",
+                "gdpr",
+                "soc2",
+                "iso27001",
+              ]}
+              current={
+                frameworkFilter
+              }
+              onChange={(
+                value,
+              ) =>
+                setFrameworkFilter(
+                  value as
+                    ComplianceFramework
+                    | "all",
+                )
+              }
+            />
+
+            <span className="text-white/12">
+              /
+            </span>
+
+            <FilterSet
+              values={[
+                "all",
+                "critical",
+                "high",
+                "medium",
+                "low",
+              ]}
+              current={
+                severityFilter
+              }
+              onChange={(
+                value,
+              ) =>
+                setSeverityFilter(
+                  value as
+                    FindingSeverity
+                    | "all",
+                )
+              }
+            />
+
+            <span className="text-white/12">
+              /
+            </span>
+
+            <button
+              type="button"
+              onClick={
+                exportJson
+              }
+              className="text-white/36 transition hover:text-white"
+            >
+              JSON ↓
+            </button>
+
+            {result.sarif !=
+              null && (
+              <button
+                type="button"
+                onClick={
+                  exportSarif
+                }
+                className="text-white/36 transition hover:text-white"
+              >
+                SARIF ↓
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-12">
+          {findings.length ===
+          0 ? (
+            <div className="py-16">
+              <div className="text-[20px] font-bold text-white/75">
+                No findings match the active filters.
+              </div>
+
+              <p className="mt-4 max-w-[680px] text-[13px] leading-6 text-white/32">
+                This only means the active deterministic rules did not produce matching evidence. It is not proof that the repository is secure or compliant.
+              </p>
+            </div>
+          ) : (
+            findings.map(
+              (
+                finding,
+                index,
+              ) => (
+                <FindingView
+                  key={`${finding.ruleId}-${finding.location.file}-${finding.location.line}-${index}`}
+                  finding={
+                    finding
+                  }
+                  index={
+                    index
+                  }
+                />
+              ),
+            )
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Metric({
+  label,
+  value,
+}: {
+  label: string;
+  value:
+    string
+    | number;
+}) {
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: 18,
+      }}
+      whileInView={{
+        opacity: 1,
+        y: 0,
+      }}
+      viewport={{
+        once: true,
+      }}
+    >
+      <div className="text-[11px] uppercase tracking-[0.08em] text-white/26">
+        {label}
+      </div>
+
+      <div className="mt-3 text-[38px] font-bold tracking-[-0.06em] text-white">
+        {value}
+      </div>
+    </motion.div>
+  );
+}
+
+function RepositoryProfileView({
+  intelligence,
+}: {
+  intelligence:
+    Intelligence;
+}) {
+  const profile =
+    intelligence.repositoryProfile;
+
+  return (
+    <div className="py-28">
+      <div className="grid gap-16 lg:grid-cols-[0.44fr_0.56fr]">
+        <div>
+          <div className="cg-eyebrow">
+            Repository intelligence
+          </div>
+
+          <h2 className="cg-heading mt-6 text-[38px] text-white md:text-[48px]">
+            What exists
+            <br />
+
+            <span className="text-white/27">
+              around the evidence.
+            </span>
+          </h2>
+
+          <p className="mt-6 max-w-[500px] text-[13px] leading-7 text-white/35">
+            Technology and source structure provide context for interpreting deterministic findings.
+          </p>
+        </div>
+
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.09em] text-white/25">
+            Technologies
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-x-8 gap-y-4">
+            {profile.technologies.length >
+            0 ? (
+              profile.technologies.map(
+                (
+                  technology,
+                  index,
+                ) => (
+                  <div
+                    key={`${technology.name}-${index}`}
+                    className="text-[14px]"
+                  >
+                    <span className="text-white/76">
                       {
-                        result
-                          .repository
-                          .branch
+                        technology.name
+                      }
+                    </span>
+
+                    <span className="ml-2 text-[10px] uppercase text-[#a98cff]/58">
+                      {
+                        technology.category
                       }
                     </span>
                   </div>
-                </div>
+                ),
+              )
+            ) : (
+              <div className="text-[13px] text-white/32">
+                No recognized technology dependencies.
               </div>
+            )}
+          </div>
 
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    downloadJson(
-                      "complyguard-report.json",
-                      result,
-                    )
+          <div className="mt-14 text-[11px] uppercase tracking-[0.09em] text-white/25">
+            Risk surfaces
+          </div>
+
+          <div className="mt-4">
+            {profile.riskSurfaces.map(
+              (
+                surface,
+                index,
+              ) => (
+                <motion.div
+                  key={
+                    surface.id
                   }
-                  className="rounded-xl border-black/10 bg-white shadow-none"
+                  initial={{
+                    opacity: 0,
+                    x: 18,
+                  }}
+                  whileInView={{
+                    opacity: 1,
+                    x: 0,
+                  }}
+                  viewport={{
+                    once: true,
+                  }}
+                  transition={{
+                    delay:
+                      index *
+                      0.04,
+                  }}
+                  className="grid gap-2 border-t border-white/[0.065] py-5 md:grid-cols-[190px_1fr]"
                 >
-                  ↓ JSON
-                </Button>
+                  <div className="text-[13px] font-semibold text-white/72">
+                    {
+                      surface.label
+                    }
+                  </div>
 
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    downloadJson(
-                      "complyguard-report.sarif",
-                      result.sarif,
-                    )
+                  <div className="text-[12px] leading-6 text-white/32">
+                    {
+                      surface.reasons[
+                        0
+                      ] ??
+                      "Observed repository surface."
+                    }
+                  </div>
+                </motion.div>
+              ),
+            )}
+          </div>
+
+          <div className="mt-14 text-[11px] uppercase tracking-[0.09em] text-white/25">
+            Framework posture
+          </div>
+
+          <div className="mt-6 space-y-6">
+            {intelligence.posture.frameworks.map(
+              (
+                framework,
+              ) => (
+                <div
+                  key={
+                    framework.framework
                   }
-                  className="rounded-xl border-black/10 bg-white shadow-none"
                 >
-                  ↓ SARIF
-                </Button>
-              </div>
-            </div>
+                  <div className="flex items-end justify-between">
+                    <span className="text-[13px] text-white/58">
+                      {
+                        frameworkLabels[
+                          framework
+                            .framework
+                        ]
+                      }
+                    </span>
 
-            {result.findings.length >
-            0 ? (
-              <div className="border-b border-black/[0.07] bg-[#f8f8f6] p-5 sm:p-6">
-                <div className="grid gap-5 xl:grid-cols-2">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-black/35">
-                      Framework
-                    </p>
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setFilterFramework(
-                            "all",
-                          )
-                        }
-                        className={[
-                          "rounded-xl border px-3.5 py-2 text-xs font-semibold transition",
-                          filterFramework ===
-                          "all"
-                            ? "border-black bg-[#111214] text-white"
-                            : "border-black/10 bg-white text-black/50 hover:border-black/25",
-                        ].join(
-                          " ",
-                        )}
-                      >
-                        All
-                      </button>
-
-                      {FRAMEWORKS.filter(
-                        (framework) =>
-                          presentFrameworks.has(
-                            framework.id,
-                          ),
-                      ).map(
-                        (
-                          framework,
-                        ) => (
-                          <button
-                            key={
-                              framework.id
-                            }
-                            type="button"
-                            onClick={() =>
-                              setFilterFramework(
-                                framework.id,
-                              )
-                            }
-                            className={[
-                              "rounded-xl border px-3.5 py-2 text-xs font-semibold transition",
-                              filterFramework ===
-                              framework.id
-                                ? "border-black bg-[#111214] text-white"
-                                : "border-black/10 bg-white text-black/50 hover:border-black/25",
-                            ].join(
-                              " ",
-                            )}
-                          >
-                            {
-                              framework.label
-                            }
-                          </button>
-                        ),
-                      )}
-                    </div>
+                    <span className="text-[16px] font-bold text-white/78">
+                      {
+                        framework.score
+                      }
+                    </span>
                   </div>
 
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-black/35">
-                      Severity
-                    </p>
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setFilterSeverity(
-                            "all",
-                          )
-                        }
-                        className={[
-                          "rounded-xl border px-3.5 py-2 text-xs font-semibold transition",
-                          filterSeverity ===
-                          "all"
-                            ? "border-black bg-[#111214] text-white"
-                            : "border-black/10 bg-white text-black/50 hover:border-black/25",
-                        ].join(
-                          " ",
-                        )}
-                      >
-                        All
-                      </button>
-
-                      {SEVERITIES.filter(
-                        (severity) =>
-                          presentSeverities.has(
-                            severity.id,
-                          ),
-                      ).map(
-                        (
-                          severity,
-                        ) => (
-                          <button
-                            key={
-                              severity.id
-                            }
-                            type="button"
-                            onClick={() =>
-                              setFilterSeverity(
-                                severity.id,
-                              )
-                            }
-                            className={[
-                              "rounded-xl border px-3.5 py-2 text-xs font-semibold transition",
-                              filterSeverity ===
-                              severity.id
-                                ? "border-black bg-[#111214] text-white"
-                                : "border-black/10 bg-white text-black/50 hover:border-black/25",
-                            ].join(
-                              " ",
-                            )}
-                          >
-                            {
-                              severity.label
-                            }
-                          </button>
-                        ),
-                      )}
-                    </div>
+                  <div className="mt-3 h-px bg-white/[0.07]">
+                    <motion.div
+                      initial={{
+                        width: 0,
+                      }}
+                      whileInView={{
+                        width: `${framework.score}%`,
+                      }}
+                      viewport={{
+                        once: true,
+                      }}
+                      transition={{
+                        duration: 0.9,
+                        ease: [
+                          0.22,
+                          1,
+                          0.36,
+                          1,
+                        ],
+                      }}
+                      className="h-px bg-gradient-to-r from-[#a98cff] to-[#7fe1cf]"
+                    />
                   </div>
                 </div>
+              ),
+            )}
+          </div>
 
-                <p className="mt-4 text-xs text-black/35">
-                  Showing{" "}
+          <p className="mt-8 text-[10px] leading-5 text-white/22">
+            {
+              intelligence.posture.disclaimer
+            }
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RootRiskView({
+  risks,
+}: {
+  risks: RootRisk[];
+}) {
+  if (
+    risks.length ===
+    0
+  ) {
+    return null;
+  }
+
+  return (
+    <div className="pb-24">
+      <div className="cg-eyebrow">
+        Correlated root risks
+      </div>
+
+      <h2 className="cg-heading mt-6 max-w-[760px] text-[38px] text-white md:text-[48px]">
+        {
+          risks.length
+        }{" "}
+        underlying{" "}
+        {risks.length ===
+        1
+          ? "risk"
+          : "risks"}
+        <span className="text-white/27">
+          {" "}
+          behind the signals.
+        </span>
+      </h2>
+
+      <div className="mt-16">
+        {risks.map(
+          (
+            risk,
+            index,
+          ) => (
+            <motion.article
+              key={
+                risk.id
+              }
+              initial={{
+                opacity: 0,
+                y: 24,
+              }}
+              whileInView={{
+                opacity: 1,
+                y: 0,
+              }}
+              viewport={{
+                once: true,
+                amount: 0.15,
+              }}
+              transition={{
+                delay:
+                  index *
+                  0.045,
+              }}
+              className="grid gap-9 border-t border-white/[0.075] py-10 lg:grid-cols-[125px_1fr_0.7fr]"
+            >
+              <div>
+                <div
+                  className="cg-severity-dot"
+                  style={{
+                    background:
+                      severityColors[
+                        risk.severity
+                      ],
+                    boxShadow:
+                      `0 0 11px ${severityColors[risk.severity]}`,
+                  }}
+                />
+
+                <div
+                  className="mt-3 text-[10px] uppercase tracking-[0.08em]"
+                  style={{
+                    color:
+                      severityColors[
+                        risk.severity
+                      ],
+                  }}
+                >
                   {
-                    visibleFindings.length
-                  }{" "}
-                  of{" "}
+                    risk.severity
+                  }
+                </div>
+
+                <div className="mt-2 text-[10px] text-white/24">
                   {
-                    result.findings
-                      .length
+                    risk.signalCount
                   }{" "}
-                  findings
-                </p>
+                  signals
+                </div>
               </div>
-            ) : null}
 
-            <div className="p-5 sm:p-6">
-              {result.findings
-                .length === 0 ? (
-                <div className="flex min-h-[340px] flex-col items-center justify-center text-center">
-                  <div className="flex size-16 items-center justify-center rounded-[22px] bg-emerald-500/10 text-xl font-bold text-emerald-600">
-                    ✓
-                  </div>
+              <div>
+                <h3 className="text-[20px] font-bold tracking-[-0.04em] text-white/84">
+                  {
+                    risk.title
+                  }
+                </h3>
 
-                  <h3 className="mt-5 text-2xl font-semibold tracking-[-0.04em]">
-                    No findings
-                    detected.
-                  </h3>
+                <code className="mt-4 block text-[11px] text-[#77acff]/60">
+                  {
+                    risk.evidence.file
+                  }
+                  :
+                  {
+                    risk.evidence.line
+                  }
+                </code>
 
-                  <p className="mt-3 max-w-lg text-sm leading-7 text-black/45">
-                    The selected rule
-                    packs did not detect
-                    a mapped risk pattern
-                    in the analyzed source.
-                    This does not certify
-                    the repository as
-                    compliant.
-                  </p>
+                {risk.evidence.snippets[
+                  0
+                ] && (
+                  <pre className="mt-5 overflow-x-auto border-l border-[#f27484]/50 pl-5 text-[12px] leading-6 text-white/42">
+                    <code>
+                      {
+                        risk.evidence.snippets[
+                          0
+                        ]
+                      }
+                    </code>
+                  </pre>
+                )}
+              </div>
+
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.09em] text-white/24">
+                  Control impact
                 </div>
-              ) : visibleFindings.length ===
-                0 ? (
-                <div className="flex min-h-[260px] items-center justify-center text-center">
-                  <p className="text-sm text-black/40">
-                    No findings match
-                    the selected filters.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {visibleFindings.map(
+
+                <div className="mt-4 space-y-4">
+                  {risk.controls.map(
                     (
-                      finding,
-                      index,
-                    ) => {
-                      const severity =
-                        severityClasses(
-                          finding.severity,
-                        );
+                      control,
+                      controlIndex,
+                    ) => (
+                      <div
+                        key={`${control.framework}-${control.control}-${controlIndex}`}
+                      >
+                        <span className="text-[11px] font-semibold text-[#a98cff]">
+                          {
+                            frameworkLabels[
+                              control.framework
+                            ]
+                          }
+                        </span>
 
-                      return (
-                        <article
-                          key={`${finding.ruleId}-${finding.location.file}-${finding.location.line}-${index}`}
-                          className="group overflow-hidden rounded-[24px] border border-black/[0.08] bg-white transition hover:border-black/15 hover:shadow-[0_14px_40px_rgba(16,17,18,0.06)]"
-                        >
-                          <div className="grid lg:grid-cols-[1fr_1fr]">
-                            <div className="p-5 sm:p-6">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span
-                                  className={`size-2 rounded-full ${severity.dot}`}
-                                />
-
-                                <Badge
-                                  variant="outline"
-                                  className={`rounded-lg px-2.5 py-1 text-[9px] font-bold tracking-[0.08em] ${severity.badge}`}
-                                >
-                                  {finding.severity.toUpperCase()}
-                                </Badge>
-
-                                <Badge
-                                  variant="outline"
-                                  className="rounded-lg border-black/10 bg-black/[0.025] px-2.5 py-1 text-[9px] font-bold text-black/45"
-                                >
-                                  {finding.framework.toUpperCase()}
-                                </Badge>
-
-                                <span className="text-[10px] font-semibold text-black/25">
-                                  {
-                                    finding.ruleId
-                                  }
-                                </span>
-                              </div>
-
-                              <h3 className="mt-5 text-xl font-semibold tracking-[-0.035em]">
-                                {
-                                  finding.title
-                                }
-                              </h3>
-
-                              <p className="mt-3 text-sm leading-7 text-black/45">
-                                {
-                                  finding.description
-                                }
-                              </p>
-
-                              <div className="mt-6 rounded-2xl bg-[#f7f7f5] p-4">
-                                <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-black/30">
-                                  Control
-                                </p>
-
-                                <p className="mt-2 text-sm font-semibold">
-                                  {
-                                    finding.control
-                                  }
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="border-t border-black/[0.07] bg-[#f8f8f6] p-5 sm:p-6 lg:border-l lg:border-t-0">
-                              <div className="flex items-center justify-between gap-3">
-                                <p className="truncate font-mono text-[11px] font-semibold text-black/55">
-                                  {
-                                    finding
-                                      .location
-                                      .file
-                                  }
-                                  :
-                                  {
-                                    finding
-                                      .location
-                                      .line
-                                  }
-                                  :
-                                  {
-                                    finding
-                                      .location
-                                      .column
-                                  }
-                                </p>
-
-                                <span className="shrink-0 rounded-md bg-black/[0.045] px-2 py-1 text-[9px] font-semibold text-black/35">
-                                  SOURCE
-                                </span>
-                              </div>
-
-                              <pre className="mt-4 max-h-[180px] overflow-auto whitespace-pre-wrap rounded-2xl bg-[#111214] p-4 font-mono text-[11px] leading-6 text-white/70">
-                                {
-                                  finding.evidence
-                                }
-                              </pre>
-
-                              <div className="mt-5">
-                                <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-black/30">
-                                  Recommended
-                                  remediation
-                                </p>
-
-                                <p className="mt-2 text-sm leading-7 text-black/55">
-                                  {
-                                    finding.remediation
-                                  }
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </article>
-                      );
-                    },
+                        <span className="ml-3 text-[11px] text-white/34">
+                          {
+                            control.control
+                          }
+                        </span>
+                      </div>
+                    ),
                   )}
                 </div>
-              )}
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className="grid gap-4 lg:grid-cols-3">
-          {[
-            {
-              title:
-                "Exact source evidence",
-              description:
-                "Every result points back to the source file, line and AST expression that triggered the rule.",
-            },
-            {
-              title:
-                "Framework mapping",
-              description:
-                "Findings are mapped to relevant GDPR, SOC 2 or ISO 27001 engineering controls.",
-            },
-            {
-              title:
-                "Actionable remediation",
-              description:
-                "Results explain what was detected and what engineering change should be considered.",
-            },
-          ].map((item) => (
-            <div
-              key={item.title}
-              className="rounded-[24px] border border-black/[0.07] bg-white/65 p-6"
-            >
-              <div className="size-8 rounded-xl border border-black/10 bg-black/[0.035]" />
+              </div>
+            </motion.article>
+          ),
+        )}
+      </div>
+    </div>
+  );
+}
 
-              <h3 className="mt-6 text-base font-semibold tracking-[-0.03em]">
-                {item.title}
-              </h3>
+function FilterSet({
+  values,
+  current,
+  onChange,
+}: {
+  values: string[];
+  current: string;
 
-              <p className="mt-3 text-sm leading-7 text-black/40">
-                {
-                  item.description
-                }
-              </p>
-            </div>
-          ))}
-        </div>
+  onChange:
+    (
+      value: string,
+    ) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-4">
+      {values.map(
+        (
+          value,
+        ) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() =>
+              onChange(
+                value,
+              )
+            }
+            className={`capitalize transition ${
+              current ===
+              value
+                ? "text-[#c6b4ff]"
+                : "text-white/27 hover:text-white/65"
+            }`}
+          >
+            {value}
+          </button>
+        ),
       )}
     </div>
+  );
+}
+
+function FindingView({
+  finding,
+  index,
+}: {
+  finding:
+    ComplianceFinding;
+
+  index: number;
+}) {
+  const color =
+    severityColors[
+      finding.severity
+    ];
+
+  return (
+    <motion.article
+      initial={{
+        opacity: 0,
+        y: 22,
+      }}
+      whileInView={{
+        opacity: 1,
+        y: 0,
+      }}
+      viewport={{
+        once: true,
+        amount: 0.12,
+      }}
+      transition={{
+        delay:
+          Math.min(
+            index *
+              0.025,
+            0.2,
+          ),
+      }}
+      className="grid gap-8 border-t border-white/[0.07] py-11 lg:grid-cols-[135px_1fr]"
+    >
+      <div>
+        <span
+          className="cg-severity-dot block"
+          style={{
+            background:
+              color,
+            boxShadow:
+              `0 0 10px ${color}`,
+          }}
+        />
+
+        <div
+          className="mt-3 text-[10px] uppercase tracking-[0.08em]"
+          style={{
+            color,
+          }}
+        >
+          {
+            finding.severity
+          }
+        </div>
+
+        <div className="mt-4 text-[10px] text-white/23">
+          {
+            frameworkLabels[
+              finding.framework
+            ]
+          }
+        </div>
+
+        <div className="mt-1 break-all text-[9px] text-white/18">
+          {
+            finding.ruleId
+          }
+        </div>
+      </div>
+
+      <div>
+        <h3 className="max-w-[900px] text-[20px] font-bold tracking-[-0.04em] text-white/85">
+          {
+            finding.title
+          }
+        </h3>
+
+        <p className="mt-4 max-w-[900px] text-[13px] leading-7 text-white/37">
+          {
+            finding.description
+          }
+        </p>
+
+        <div className="mt-7 grid gap-10 xl:grid-cols-[1.05fr_0.95fr]">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.09em] text-white/22">
+              Evidence
+            </div>
+
+            <code className="mt-3 block text-[11px] text-[#77acff]/65">
+              {
+                finding.location.file
+              }
+              :
+              {
+                finding.location.line
+              }
+              :
+              {
+                finding.location.column
+              }
+            </code>
+
+            <pre className="mt-5 overflow-x-auto border-l border-white/[0.14] pl-5 text-[12px] leading-6 text-white/43">
+              <code>
+                {
+                  finding.evidence
+                }
+              </code>
+            </pre>
+          </div>
+
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.09em] text-white/22">
+              {
+                finding.control
+              }
+            </div>
+
+            <p className="mt-5 text-[12px] leading-6 text-white/38">
+              {
+                finding.remediation
+              }
+            </p>
+          </div>
+        </div>
+      </div>
+    </motion.article>
   );
 }

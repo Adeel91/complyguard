@@ -1,80 +1,113 @@
-const capabilities = [
+const rows = [
   {
-    title: "Real AST analysis",
-    description:
-      "Source files are parsed into syntax trees. Findings come from actual code structure, not hardcoded demo data.",
-    metric: "TS / TSX / JS / JSX",
+    number: "01",
+    label: "PROFILE",
+    title:
+      "Understand the repository before judging it.",
+    copy:
+      "Dependencies, application structure and security sensitive source areas establish the context around every scan.",
+    output:
+      "repository.profile",
   },
   {
-    title: "Exact evidence",
-    description:
-      "Every result includes file, line, column, rule, severity, mapped control and remediation guidance.",
-    metric: "Source attached",
+    number: "02",
+    label: "INSPECT",
+    title:
+      "Find evidence in actual program structure.",
+    copy:
+      "AST rules operate on real source syntax and preserve exact file, line, column and triggering expression.",
+    output:
+      "evidence[]",
   },
   {
-    title: "Multiple outputs",
-    description:
-      "Use the interactive web report or export structured results for other engineering workflows.",
-    metric: "JSON + SARIF",
+    number: "03",
+    label: "CORRELATE",
+    title:
+      "Turn repeated signals into root risks.",
+    copy:
+      "A single insecure HTTP call should not pretend to be three unrelated vulnerabilities simply because three frameworks care about it.",
+    output:
+      "rootRisks[]",
   },
   {
-    title: "One scanner core",
-    description:
-      "The CLI and web application both execute the same deterministic rule engine.",
-    metric: "CLI + Web",
+    number: "04",
+    label: "MAP",
+    title:
+      "Show exactly which controls are affected.",
+    copy:
+      "Each root risk retains its evidence while mapping into the relevant GDPR, SOC 2 and ISO 27001 engineering controls.",
+    output:
+      "controls[]",
   },
 ];
 
 export function Capabilities() {
   return (
     <section
-      id="product"
-      className="border-b border-black/[0.06] bg-[#f5f5f3]"
+      id="engine"
+      className="border-b border-white/[0.08]"
     >
-      <div className="mx-auto max-w-[1500px] px-5 py-20 sm:px-8 lg:px-12 lg:py-24">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#ef3f46]">
-              Product
-            </p>
+      <div className="cg-container border-x border-white/[0.08]">
+        <div className="grid border-b border-white/[0.08] lg:grid-cols-[0.42fr_0.58fr]">
+          <div className="px-8 py-16 md:px-14">
+            <div className="cg-eyebrow">
+              Engine
+            </div>
 
-            <h2 className="mt-4 max-w-2xl text-4xl font-semibold leading-[1.02] tracking-[-0.055em]">
-              Built like an engineering tool,
-              not a compliance landing page.
+            <h2 className="cg-heading mt-7 max-w-[500px] text-[38px] text-white md:text-[48px]">
+              Facts first.
+              <br />
+              <span className="text-white/30">
+                Reasoning second.
+              </span>
             </h2>
           </div>
 
-          <p className="max-w-md text-sm leading-7 text-black/40">
-            Deterministic first. Transparent by
-            default. Every result can be traced back
-            to the source that produced it.
-          </p>
+          <div className="flex items-end border-t border-white/[0.08] px-8 py-16 lg:border-l lg:border-t-0 md:px-14">
+            <p className="max-w-[650px] text-[15px] leading-7 text-white/47">
+              The product starts from inspectable source evidence instead of asking a model to guess whether a repository looks compliant.
+            </p>
+          </div>
         </div>
 
-        <div className="mt-12 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {capabilities.map((item) => (
-            <div
-              key={item.title}
-              className="group min-h-[250px] rounded-[24px] border border-black/[0.07] bg-white p-6 transition hover:-translate-y-1 hover:border-black/15 hover:shadow-[0_18px_50px_rgba(13,14,15,0.06)]"
+        {rows.map(
+          (
+            row,
+            index,
+          ) => (
+            <article
+              key={row.number}
+              className={`grid gap-7 px-8 py-10 md:grid-cols-[70px_140px_1fr_190px] md:items-center md:px-14 ${
+                index !==
+                rows.length - 1
+                  ? "border-b border-white/[0.08]"
+                  : ""
+              }`}
             >
-              <div className="flex size-9 items-center justify-center rounded-xl bg-[#111214]">
-                <div className="size-2 rounded-full bg-[#ef3f46]" />
+              <span className="text-[13px] text-white/25">
+                {row.number}
+              </span>
+
+              <span className="text-[12px] font-semibold tracking-[0.08em] text-[#a992ff]">
+                {row.label}
+              </span>
+
+              <div>
+                <h3 className="text-[18px] font-semibold leading-6 text-white/88">
+                  {row.title}
+                </h3>
+
+                <p className="mt-3 max-w-[690px] text-[13px] leading-6 text-white/43">
+                  {row.copy}
+                </p>
               </div>
 
-              <h3 className="mt-10 text-lg font-semibold tracking-[-0.035em]">
-                {item.title}
-              </h3>
-
-              <p className="mt-3 text-sm leading-7 text-black/42">
-                {item.description}
-              </p>
-
-              <div className="mt-8 border-t border-black/[0.06] pt-4 text-[9px] font-bold uppercase tracking-[0.12em] text-black/30">
-                {item.metric}
-              </div>
-            </div>
-          ))}
-        </div>
+              <code className="text-[12px] text-[#82dfcf]/70">
+                → {row.output}
+              </code>
+            </article>
+          ),
+        )}
       </div>
     </section>
   );

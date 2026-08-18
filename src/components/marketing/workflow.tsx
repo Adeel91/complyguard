@@ -2,78 +2,97 @@ const steps = [
   {
     number: "01",
     title: "Repository",
-    description:
-      "Provide a public GitHub URL or run the local CLI against a project directory.",
+    value:
+      "github.com/org/project",
   },
   {
     number: "02",
-    title: "Source graph",
-    description:
-      "ComplyGuard parses JavaScript and TypeScript into a real AST representation.",
+    title: "Profile",
+    value:
+      "technology + risk surfaces",
   },
   {
     number: "03",
-    title: "Rule execution",
-    description:
-      "Framework specific rules evaluate concrete source patterns and contextual conditions.",
+    title: "Evidence",
+    value:
+      "AST + source locations",
   },
   {
     number: "04",
-    title: "Evidence",
-    description:
-      "Findings return exact source locations, control mappings and actionable remediation.",
+    title: "Correlation",
+    value:
+      "signals → root risks",
+  },
+  {
+    number: "05",
+    title: "Mapping",
+    value:
+      "risks → controls",
   },
 ];
 
 export function Workflow() {
   return (
     <section
-      id="workflow"
-      className="relative overflow-hidden bg-[#101112] text-white"
+      id="pipeline"
+      className="border-b border-white/[0.08]"
     >
-      <div className="cg-grid-dark absolute inset-0 opacity-40" />
+      <div className="cg-container border-x border-white/[0.08] px-8 py-20 md:px-14">
+        <div className="cg-eyebrow">
+          Execution pipeline
+        </div>
 
-      <div className="absolute right-[-160px] top-[-160px] size-[500px] rounded-full bg-[#ef3f46]/10 blur-[150px]" />
+        <h2 className="cg-heading mt-7 max-w-[780px] text-[38px] text-white md:text-[48px]">
+          Nothing disappears
+          <span className="text-white/30">
+            {" "}
+            between source and report.
+          </span>
+        </h2>
 
-      <div className="relative mx-auto max-w-[1500px] px-5 py-20 sm:px-8 lg:px-12 lg:py-24">
-        <div className="grid gap-12 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#ff767c]">
-              Pipeline
-            </p>
+        <div className="mt-14 border border-white/[0.09] bg-[#0c0b0f]">
+          <div className="flex h-11 items-center gap-2 border-b border-white/[0.08] px-5">
+            <span className="h-2.5 w-2.5 rounded-full bg-white/10" />
+            <span className="h-2.5 w-2.5 rounded-full bg-white/[0.07]" />
+            <span className="h-2.5 w-2.5 rounded-full bg-white/[0.05]" />
 
-            <h2 className="mt-4 text-4xl font-semibold leading-[1.02] tracking-[-0.055em]">
-              Source in.
-              Evidence out.
-            </h2>
-
-            <p className="mt-5 max-w-md text-sm leading-7 text-white/35">
-              No generated compliance theatre.
-              Every stage is inspectable and based on
-              the repository being analyzed.
-            </p>
+            <span className="ml-3 text-[11px] text-white/25">
+              complyguard.pipeline
+            </span>
           </div>
 
-          <div className="grid gap-px overflow-hidden rounded-[24px] border border-white/[0.08] bg-white/[0.08] md:grid-cols-2">
-            {steps.map((step) => (
+          {steps.map(
+            (
+              step,
+              index,
+            ) => (
               <div
                 key={step.number}
-                className="min-h-[220px] bg-[#101112] p-6 transition hover:bg-[#161719]"
+                className={`grid min-h-[86px] gap-4 px-6 py-6 md:grid-cols-[80px_220px_1fr_auto] md:items-center ${
+                  index !==
+                  steps.length - 1
+                    ? "border-b border-white/[0.07]"
+                    : ""
+                }`}
               >
-                <div className="text-[9px] font-bold uppercase tracking-[0.13em] text-white/20">
+                <span className="text-[12px] text-white/23">
                   {step.number}
-                </div>
+                </span>
 
-                <h3 className="mt-12 text-lg font-semibold tracking-[-0.035em]">
+                <span className="text-[14px] font-semibold text-[#a992ff]">
                   {step.title}
-                </h3>
+                </span>
 
-                <p className="mt-3 text-sm leading-7 text-white/35">
-                  {step.description}
-                </p>
+                <code className="text-[13px] text-white/54">
+                  {step.value}
+                </code>
+
+                <span className="hidden text-[12px] text-[#82dfcf]/55 md:block">
+                  pass →
+                </span>
               </div>
-            ))}
-          </div>
+            ),
+          )}
         </div>
       </div>
     </section>

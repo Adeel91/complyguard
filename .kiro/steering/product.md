@@ -1,23 +1,39 @@
 # ComplyGuard Product Direction
 
-ComplyGuard is a real static analysis product for detecting software engineering patterns that may conflict with mapped compliance controls.
+ComplyGuard is an evidence first autonomous compliance engineering system.
 
-Initial frameworks:
+The deterministic scanner establishes facts from source code.
 
-GDPR
+Repository intelligence explains the technical environment and risk surfaces.
 
-SOC 2
+Kiro Deep Review will reason about ambiguous findings, reject false positives, explain impact and create remediation plans.
 
-ISO 27001
+The product must never become a generic AI code reviewer.
 
-ComplyGuard must never claim to provide legal certification.
+The product advantage is:
 
-Every finding must originate from actual source analysis.
+Compliance control mapping
 
-No simulated findings are allowed.
+Deterministic evidence
 
-No hardcoded compliance scores are allowed.
+Repository specific context
 
-No fake repository results are allowed.
+Consistent verification
 
-Every finding must include evidence from the analyzed source.
+Audit friendly output
+
+Remediation verification
+
+Every deterministic finding must originate from actual source analysis.
+
+No simulated findings.
+
+No fake repository results.
+
+No fabricated legal compliance scores.
+
+Observed engineering posture must be transparent and derived from real scanner output.
+
+Deep Review may not invent source evidence.
+
+ComplyGuard does not provide compliance certification.

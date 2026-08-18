@@ -1,29 +1,23 @@
 import Link from "next/link";
 
+import { Logo } from "@/components/brand/logo";
+
 export function SiteFooter() {
   return (
-    <footer className="bg-[#101112] text-white">
-      <div className="mx-auto max-w-[1500px] px-5 py-14 sm:px-8 lg:px-12">
-        <div className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
+    <footer className="pb-10 pt-16">
+      <div className="cg-container">
+        <div className="cg-fade-line" />
+
+        <div className="grid gap-10 py-12 md:grid-cols-[1fr_auto] md:items-end">
           <div>
-            <div className="flex items-center gap-3">
-              <div className="flex size-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-[10px] font-black">
-                CG
-              </div>
+            <Logo />
 
-              <span className="text-base font-semibold tracking-[-0.035em]">
-                ComplyGuard
-              </span>
-            </div>
-
-            <p className="mt-5 max-w-xl text-sm leading-7 text-white/40">
-              Deterministic source analysis for
-              engineering patterns associated with
-              GDPR, SOC 2 and ISO 27001 controls.
+            <p className="mt-5 max-w-[560px] text-[11px] leading-6 text-white/25">
+              Evidence first engineering analysis for source patterns associated with GDPR, SOC 2 and ISO 27001 controls.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-6 text-xs text-white/45">
+          <div className="flex gap-7 text-[11px] text-white/30">
             <Link
               href="/scan"
               className="transition hover:text-white"
@@ -42,15 +36,14 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-6 text-[10px] text-white/25 sm:flex-row sm:justify-between">
-          <p>
-            ComplyGuard does not certify regulatory
-            compliance.
-          </p>
+        <div className="flex flex-col gap-3 text-[9px] text-white/16 sm:flex-row sm:justify-between">
+          <span>
+            ComplyGuard does not certify compliance.
+          </span>
 
-          <p>
-            Built with Kiro Specs, Steering and Hooks.
-          </p>
+          <span>
+            Built with Kiro · deterministic evidence engine
+          </span>
         </div>
       </div>
     </footer>

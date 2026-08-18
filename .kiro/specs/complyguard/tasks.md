@@ -1,47 +1,91 @@
 # Implementation Tasks
 
-1. Complete scanner infrastructure
+## Foundation
 
-2. Design compliance control metadata model
+[x] Scanner infrastructure
 
-3. Implement GDPR rule pack
+[x] Compliance finding model
 
-4. Implement SOC 2 rule pack
+[x] GDPR rules
 
-5. Implement ISO 27001 rule pack
+[x] SOC 2 rules
 
-6. Build vulnerable fixtures for every rule
+[x] ISO 27001 rules
 
-7. Build compliant fixtures for every rule
+[x] Vulnerable fixtures
 
-8. Add comprehensive rule tests
+[x] Compliant fixtures
 
-9. Implement SARIF reporter
+[x] Rule tests
 
-10. Implement real GitHub repository ingestion
+[x] SARIF reporter
 
-11. Implement secure temporary repository processing
+[x] Public GitHub ingestion
 
-12. Build scan execution API
+[x] Secure temporary repository processing
 
-13. Connect web scanner interface to real scanner output
+[x] Scan API
 
-14. Build findings dashboard
+[x] Web scanner
 
-15. Build source evidence viewer
+[x] Source evidence
 
-16. Build framework filtering
+[x] Framework filters
 
-17. Build severity filtering
+[x] Severity filters
 
-18. Build report export
+[x] Report exports
 
-19. Add Kiro scanner hook
+[x] Kiro verification hooks
 
-20. Complete production security review
+[x] Production security hardening
 
-21. Complete README
+## Intelligence transformation
 
-22. Complete demo repository
+[x] Repository technology profiler
 
-23. Run full production verification
+[x] Risk surface detection
+
+[x] Observed engineering posture engine
+
+[x] Deterministic analysis report model
+
+[x] Deep Review source context pack
+
+[x] AI provider abstraction
+
+[x] Kiro Deep Review prompt contract
+
+[x] Vulnerable demo application
+
+[ ] Implement runtime Kiro provider
+
+[ ] Validate Kiro structured response
+
+[ ] Add Deep Review API
+
+[ ] Add Deep Review interface
+
+[ ] Add finding verdict state
+
+[ ] Add remediation plan interface
+
+[ ] Add patch proposal interface
+
+[ ] Add developer approval step
+
+[ ] Add deterministic rescan verification
+
+[ ] Add before and after posture comparison
+
+[ ] Add Kiro generated remediation spec
+
+[ ] Add optional Kiro remediation execution
+
+[ ] Add final demo workflow
+
+[ ] Update final README
+
+[ ] Deploy production demo
+
+[ ] Record submission video

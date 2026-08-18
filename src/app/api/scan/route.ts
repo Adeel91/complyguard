@@ -11,6 +11,10 @@ import {
   downloadGitHubRepository,
   GitHubRepositoryError,
 } from "@/server/github-repository";
+import { profileRepository } from "@/intelligence/repository-profiler";
+import { correlateFindings } from "@/scanner/correlation";
+import { calculateEngineeringPosture } from "@/scanner/scoring/posture-score";
+import { createAnalysisReport } from "@/reporting/analysis-report";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -80,6 +84,38 @@ export async function POST(request: Request) {
       getRulesForFrameworks(frameworks),
     );
 
+    const repositoryProfile =
+      profileRepository(
+        repository.rootPath,
+      );
+
+    const rootRisks =
+      correlateFindings(
+        result.findings,
+      );
+
+    const posture =
+      calculateEngineeringPosture(
+        result.findings,
+        frameworks,
+      );
+
+    const analysisReport =
+      createAnalysisReport({
+        sourceFileCount:
+          repositoryProfile.sourceFileCount,
+        ruleCount:
+          getRulesForFrameworks(
+            frameworks,
+          ).length,
+        findings:
+          result.findings,
+        frameworks,
+        posture,
+        repositoryProfile,
+      });
+
+
     const findings = result.findings.map((finding) => ({
       ...finding,
       location: {
@@ -92,6 +128,14 @@ export async function POST(request: Request) {
     }));
 
     return NextResponse.json({
+      intelligence: {
+        repositoryProfile,
+        rootRisks,
+        posture,
+        report:
+          analysisReport,
+      },
+
       repository: {
         owner: repository.owner,
         name: repository.repository,

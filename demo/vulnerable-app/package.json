@@ -1,0 +1,11 @@
+{
+  "name": "complyguard-vulnerable-demo",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "^5.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "pg": "^8.0.0",
+    "stripe": "^18.0.0"
+  }
+}

@@ -1,39 +1,65 @@
 # ComplyGuard Design
 
+## Pipeline
+
+Repository
+
+→ Secure ingestion
+
+→ Repository intelligence
+
+→ Deterministic AST scanner
+
+→ Evidence backed findings
+
+→ Observed engineering posture
+
+→ Optional Kiro Deep Review
+
+→ Remediation plan
+
+→ Deterministic rescan
+
 ## Web layer
 
-Next.js and React provide the browser interface.
-
-The interface presents project ingestion, scan progress, findings, source evidence, framework mappings, and remediation guidance.
+Next.js and React provide repository ingestion and evidence visualization.
 
 ## Scanner layer
 
-The scanner is framework independent TypeScript.
+The scanner remains deterministic and independent from React, Next.js and AI providers.
 
-ts morph provides TypeScript compiler AST access.
+## Intelligence layer
 
-The scanner loads project source files and evaluates registered compliance rules.
+src/intelligence profiles technologies, source areas and risk surfaces using actual repository content.
 
-## Rule layer
+## Scoring layer
 
-Each framework owns an independent rule pack.
+src/scanner/scoring derives observed engineering posture only from deterministic findings.
 
-Rules implement a shared ComplianceRule interface.
-
-A rule receives a SourceFile and returns zero or more ComplianceFinding values.
+It does not calculate legal compliance.
 
 ## Reporting layer
 
-Structured results support the web application, CLI JSON output, and future SARIF generation.
+src/reporting creates deterministic executive and technical analysis reports.
 
-## CLI layer
+## Deep Review layer
 
-Commander provides the local command interface.
+src/ai defines provider independent contracts.
 
-The CLI consumes exactly the same scanner engine as the web application.
+The Kiro integration will implement ComplianceIntelligenceProvider.
+
+The deep reasoning layer receives real evidence and surrounding source context.
+
+It does not replace deterministic scanning.
+
+## Verification
+
+A remediation is successful only when the deterministic rescan confirms that the original finding is gone.
+
+## CLI
+
+The CLI and web continue to share the same scanner engine.
 
 ## Testing
 
-Vitest validates scanner infrastructure and every compliance rule.
-
-Fixture projects contain actual vulnerable and compliant source examples.
+Vitest covers deterministic rules, repository profiling, scoring, source context creation and deep review contracts.

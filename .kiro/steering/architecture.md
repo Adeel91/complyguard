@@ -1,21 +1,59 @@
 # Architecture
 
-Keep the application modular.
+Keep all layers modular.
 
-The web interface, scanner engine, compliance rule packs, reporters, and CLI must remain separate modules.
+## Deterministic scanner
 
-The scanner engine must not depend on React or Next.js.
+src/scanner
 
-The CLI and web application must consume the same scanner engine.
+Must remain independent from React, Next.js and AI providers.
 
-Compliance frameworks must use independent rule packs.
+## Repository intelligence
 
-Every rule must be independently testable.
+src/intelligence
 
-Prefer TypeScript AST analysis over regular expressions when program structure can be inspected directly.
+Profiles repository technologies, source areas and risk surfaces.
 
-Components must remain focused and file based.
+## Reporting
 
-Do not create giant React components.
+src/reporting
 
-Do not place unrelated scanner logic in a single file.
+Builds deterministic reports from real scan output.
+
+## Deep Review
+
+src/ai
+
+Contains provider contracts, source context construction and Kiro integration.
+
+AI providers must never be imported into the deterministic scanner.
+
+## Server
+
+src/server
+
+Handles secure external repository ingestion.
+
+## Web
+
+src/app and src/components
+
+Render repository intelligence, deterministic findings and optional deep review results.
+
+## Verification invariant
+
+AI output is advisory.
+
+Deterministic source evidence remains the source of truth.
+
+A remediation is considered verified only after a deterministic rescan confirms the original finding no longer exists.
+
+## Code quality
+
+Components remain file based and focused.
+
+Do not place unrelated logic in giant files.
+
+Do not create duplicate scanner engines.
+
+Do not create fake demo responses.

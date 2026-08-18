@@ -1,85 +1,119 @@
-const items = [
+const frameworks = [
   {
-    id: "GDPR",
-    title: "Privacy engineering",
-    text:
-      "Inspect source patterns related to personal data exposure, transport security, logging, credentials and secure processing.",
-    controls: "Articles 5 · 25 · 32",
+    name: "GDPR",
+    subtitle:
+      "Privacy engineering",
+    controls:
+      "Article 5 · Article 32",
+    color:
+      "#82dfcf",
   },
   {
-    id: "SOC 2",
-    title: "Trust controls",
-    text:
-      "Identify implementation patterns around access control, secrets, auditability, communication security and operational logging.",
-    controls: "CC6 · CC7",
+    name: "SOC 2",
+    subtitle:
+      "Trust services",
+    controls:
+      "CC6 · CC7",
+    color:
+      "#79adff",
   },
   {
-    id: "ISO 27001",
-    title: "Information security",
-    text:
-      "Map technical findings to secure coding, cryptography, logging, privileged operations and network protection controls.",
-    controls: "ISO 27001:2022 · A.8",
+    name: "ISO 27001",
+    subtitle:
+      "Security controls",
+    controls:
+      "A.8",
+    color:
+      "#a992ff",
   },
 ];
 
 export function Frameworks() {
   return (
     <section
-      id="frameworks"
-      className="border-b border-black/[0.06] bg-white"
+      id="mapping"
+      className="border-b border-white/[0.08] bg-[#0c0b0f]"
     >
-      <div className="mx-auto max-w-[1500px] px-5 py-20 sm:px-8 lg:px-12 lg:py-24">
-        <div className="grid gap-12 lg:grid-cols-[0.65fr_1.35fr] lg:gap-20">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#ef3f46]">
-              Control mapping
-            </p>
+      <div className="cg-container border-x border-white/[0.08]">
+        <div className="px-8 py-16 md:px-14">
+          <div className="cg-eyebrow">
+            Cross framework mapping
+          </div>
 
-            <h2 className="mt-4 max-w-lg text-4xl font-semibold leading-[1.02] tracking-[-0.055em]">
-              Engineering evidence,
-              not a fake compliance score.
+          <div className="mt-7 grid gap-8 lg:grid-cols-[0.58fr_0.42fr] lg:items-end">
+            <h2 className="cg-heading max-w-[730px] text-[38px] text-white md:text-[48px]">
+              One root risk.
+              <br />
+              <span className="text-white/30">
+                Multiple consequences.
+              </span>
             </h2>
 
-            <p className="mt-5 max-w-md text-sm leading-7 text-black/45">
-              ComplyGuard does not declare that an
-              organization is compliant. It surfaces
-              concrete technical signals that
-              developers can inspect and fix.
+            <p className="max-w-[530px] text-[14px] leading-7 text-white/43">
+              ComplyGuard keeps the underlying engineering problem intact while showing every relevant framework relationship.
             </p>
           </div>
+        </div>
 
-          <div className="grid gap-3">
-            {items.map((item, index) => (
-              <div
-                key={item.id}
-                className="group grid gap-5 rounded-[22px] border border-black/[0.07] bg-[#f7f7f5] p-5 transition hover:border-black/15 hover:bg-white sm:grid-cols-[70px_1fr_auto] sm:items-start sm:p-6"
+        <div className="grid border-t border-white/[0.08] lg:grid-cols-3">
+          {frameworks.map(
+            (
+              framework,
+              index,
+            ) => (
+              <article
+                key={framework.name}
+                className={`relative min-h-[320px] px-8 py-10 md:px-12 ${
+                  index !==
+                  frameworks.length - 1
+                    ? "border-b border-white/[0.08] lg:border-b-0 lg:border-r"
+                    : ""
+                }`}
               >
-                <div className="text-[10px] font-semibold text-black/25">
-                  0{index + 1}
+                <div
+                  className="absolute left-0 top-0 h-[3px] w-full"
+                  style={{
+                    background:
+                      framework.color,
+                  }}
+                />
+
+                <div className="flex items-center justify-between">
+                  <span className="text-[12px] text-white/25">
+                    0{index + 1}
+                  </span>
+
+                  <span
+                    className="h-2 w-2 rounded-full"
+                    style={{
+                      background:
+                        framework.color,
+                      boxShadow:
+                        `0 0 12px ${framework.color}`,
+                    }}
+                  />
                 </div>
 
-                <div>
-                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <h3 className="text-lg font-semibold tracking-[-0.035em]">
-                      {item.id}
-                    </h3>
+                <h3 className="cg-heading mt-16 text-[32px] text-white">
+                  {framework.name}
+                </h3>
 
-                    <span className="text-xs text-black/35">
-                      {item.title}
-                    </span>
+                <p className="mt-3 text-[13px] text-white/38">
+                  {framework.subtitle}
+                </p>
+
+                <div className="mt-16 border-t border-white/[0.08] pt-5">
+                  <div className="text-[11px] uppercase tracking-[0.08em] text-white/28">
+                    Relevant controls
                   </div>
 
-                  <p className="mt-3 max-w-2xl text-sm leading-7 text-black/45">
-                    {item.text}
-                  </p>
+                  <div className="mt-3 text-[14px] text-white/67">
+                    {framework.controls}
+                  </div>
                 </div>
-
-                <div className="rounded-full border border-black/[0.08] bg-white px-3 py-1.5 text-[9px] font-semibold text-black/40">
-                  {item.controls}
-                </div>
-              </div>
-            ))}
-          </div>
+              </article>
+            ),
+          )}
         </div>
       </div>
     </section>

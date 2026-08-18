@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 
 import "./globals.css";
+import "@fontsource/maple-mono/400.css";
+import "@fontsource/maple-mono/500.css";
+import "@fontsource/maple-mono/600.css";
+import "@fontsource/maple-mono/700.css";
 
 export const metadata: Metadata = {
   title: {
