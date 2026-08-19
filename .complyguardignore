@@ -1,0 +1,7 @@
+# ComplyGuard source scope
+#
+# Tests and the vulnerable demo deliberately contain insecure source
+# patterns and should not influence a normal repository posture scan.
+
+tests/
+demo/vulnerable-app/

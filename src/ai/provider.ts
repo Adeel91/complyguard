@@ -4,11 +4,13 @@ import type {
   DeepReviewResult,
 } from "@/ai/types";
 
-export class IntelligenceUnavailableError extends Error {
-  constructor() {
-    super(
-      "Deep Review is not configured. Deterministic scanning remains available.",
-    );
+export class IntelligenceUnavailableError
+  extends Error {
+  constructor(
+    message =
+      "Deep Review provider is not configured.",
+  ) {
+    super(message);
 
     this.name =
       "IntelligenceUnavailableError";
@@ -16,8 +18,7 @@ export class IntelligenceUnavailableError extends Error {
 }
 
 export class UnconfiguredIntelligenceProvider
-  implements ComplianceIntelligenceProvider
-{
+  implements ComplianceIntelligenceProvider {
   readonly name =
     "unconfigured";
 
@@ -25,6 +26,11 @@ export class UnconfiguredIntelligenceProvider
     input: DeepReviewRequest,
   ): Promise<DeepReviewResult> {
     void input;
+
     throw new IntelligenceUnavailableError();
   }
+}
+
+export function createUnconfiguredIntelligenceProvider(): ComplianceIntelligenceProvider {
+  return new UnconfiguredIntelligenceProvider();
 }

@@ -12,7 +12,11 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "scan": "tsx src/cli/index.ts scan",
-    "check": "pnpm typecheck && pnpm lint && pnpm test:run"
+    "check": "pnpm typecheck && pnpm lint && pnpm test:run",
+    "deep-review": "tsx src/cli/deep-review.ts",
+    "verify-remediation": "tsx src/cli/verify-remediation.ts",
+    "deep-review:demo": "tsx src/cli/deep-review.ts demo/vulnerable-app --repository \"ComplyGuard vulnerable demo\" --frameworks gdpr,soc2,iso27001 --max-risks 8",
+    "deep-review:demo:prompt": "tsx src/cli/deep-review.ts demo/vulnerable-app --repository \"ComplyGuard vulnerable demo\" --frameworks gdpr,soc2,iso27001 --max-risks 8 --prompt-only"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

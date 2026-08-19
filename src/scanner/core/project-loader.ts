@@ -3,6 +3,8 @@ import { resolve } from "node:path";
 
 import { Project } from "ts-morph";
 
+import { applySourceScope } from "@/scanner/core/source-scope";
+
 export interface LoadedProject {
   rootPath: string;
   project: Project;
@@ -35,8 +37,14 @@ export function loadProject(projectPath: string): LoadedProject {
       `!${rootPath}/.next/**/*`,
       `!${rootPath}/dist/**/*`,
       `!${rootPath}/build/**/*`,
+      `!${rootPath}/coverage/**/*`,
     ]);
   }
+
+  applySourceScope(
+    project,
+    rootPath,
+  );
 
   return {
     rootPath,

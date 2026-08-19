@@ -1,0 +1,18 @@
+{
+  "name": "complyguard-deep-review",
+  "description": "Read-only contextual reviewer for deterministic ComplyGuard root risks.",
+  "prompt": "file://./complyguard-deep-review.md",
+  "tools": [
+    "read"
+  ],
+  "allowedTools": [
+    "read"
+  ],
+  "resources": [
+    "file://../steering/product.md",
+    "file://../steering/architecture.md",
+    "file://../steering/quality.md",
+    "file://../specs/complyguard/requirements.md",
+    "file://../specs/complyguard/design.md"
+  ]
+}

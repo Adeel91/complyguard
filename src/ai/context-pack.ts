@@ -1,6 +1,7 @@
 import {
   readFileSync,
 } from "node:fs";
+
 import {
   relative,
   resolve,
@@ -8,141 +9,194 @@ import {
 } from "node:path";
 
 import type {
-  DeepReviewRequest,
-  SourceContext,
+  DeepReviewSourceContext,
 } from "@/ai/types";
-import type { RepositoryProfile } from "@/intelligence/types";
-import { correlateFindings } from "@/scanner/correlation";
-import type { EngineeringPosture } from "@/scanner/scoring/posture-score";
+
 import type {
-  ComplianceFinding,
-  ComplianceFramework,
-} from "@/scanner/types/finding";
+  RootRisk,
+} from "@/scanner/correlation/types";
 
-function assertInsideProject(
-  projectPath: string,
-  filePath: string,
+const DEFAULT_CONTEXT_RADIUS =
+  12;
+
+const DEFAULT_MAX_RISKS =
+  20;
+
+function ensureInsideProject(
+  projectRoot: string,
+  candidate: string,
 ): string {
-  const project =
-    resolve(projectPath);
+  const resolvedRoot =
+    resolve(
+      projectRoot,
+    );
 
-  const target =
-    resolve(filePath);
+  const resolvedFile =
+    resolve(
+      resolvedRoot,
+      candidate,
+    );
+
+  const relativePath =
+    relative(
+      resolvedRoot,
+      resolvedFile,
+    );
 
   if (
-    target !== project &&
-    !target.startsWith(
-      `${project}${sep}`,
-    )
+    relativePath ===
+      ".." ||
+    relativePath.startsWith(
+      `..${sep}`,
+    ) ||
+    relativePath ===
+      ""
   ) {
-    throw new Error(
-      "Finding source is outside the analyzed repository.",
-    );
+    if (
+      resolvedFile !==
+      resolvedRoot
+    ) {
+      throw new Error(
+        `Refusing to read source outside project root: ${candidate}`,
+      );
+    }
   }
 
-  return target;
+  return resolvedFile;
 }
 
-function sourceContext(
-  projectPath: string,
-  finding: ComplianceFinding,
-): SourceContext | null {
-  try {
+function normalizeLine(
+  line: number,
+): number {
+  if (
+    !Number.isFinite(
+      line,
+    )
+  ) {
+    return 1;
+  }
+
+  return Math.max(
+    1,
+    Math.floor(
+      line,
+    ),
+  );
+}
+
+export type ContextPackOptions = {
+  radius?: number;
+  maxRisks?: number;
+};
+
+export function buildDeepReviewContexts(
+  projectRoot: string,
+  rootRisks: RootRisk[],
+  options: ContextPackOptions = {},
+): DeepReviewSourceContext[] {
+  const radius =
+    Math.max(
+      1,
+      options.radius ??
+        DEFAULT_CONTEXT_RADIUS,
+    );
+
+  const maxRisks =
+    Math.max(
+      1,
+      options.maxRisks ??
+        DEFAULT_MAX_RISKS,
+    );
+
+  const contexts:
+    DeepReviewSourceContext[] =
+      [];
+
+  const limitedRisks =
+    rootRisks.slice(
+      0,
+      maxRisks,
+    );
+
+  for (
+    const risk of
+    limitedRisks
+  ) {
     const file =
-      assertInsideProject(
-        projectPath,
-        finding.location.file,
+      risk.evidence.file;
+
+    const absoluteFile =
+      ensureInsideProject(
+        projectRoot,
+        file,
       );
 
-    const lines =
-      readFileSync(
-        file,
-        "utf8",
-      ).split(/\r?\n/);
+    let raw: string;
 
-    const line =
-      Math.max(
-        1,
-        finding.location.line,
+    try {
+      raw =
+        readFileSync(
+          absoluteFile,
+          "utf8",
+        );
+    } catch {
+      continue;
+    }
+
+    const lines =
+      raw.split(
+        /\r?\n/,
+      );
+
+    const findingLine =
+      normalizeLine(
+        risk.evidence.line,
       );
 
     const startLine =
       Math.max(
         1,
-        line - 8,
+        findingLine -
+          radius,
       );
 
     const endLine =
       Math.min(
         lines.length,
-        line + 8,
+        findingLine +
+          radius,
       );
 
-    return {
-      file: relative(
-        projectPath,
-        file,
-      ).replaceAll("\\", "/"),
-      startLine,
-      endLine,
-      content: lines
+    const content =
+      lines
         .slice(
           startLine - 1,
           endLine,
         )
         .map(
-          (value, index) =>
-            `${startLine + index}: ${value}`,
+          (
+            line,
+            index,
+          ) =>
+            `${String(startLine + index).padStart(4, " ")} | ${line}`,
         )
-        .join("\n"),
-    };
-  } catch {
-    return null;
+        .join(
+          "\n",
+        );
+
+    contexts.push({
+      rootRiskId:
+        risk.id,
+
+      file,
+
+      startLine,
+
+      endLine,
+
+      content,
+    });
   }
-}
 
-export function createDeepReviewRequest(input: {
-  projectPath: string;
-  repository: RepositoryProfile;
-  frameworks: ComplianceFramework[];
-  posture: EngineeringPosture;
-  findings: ComplianceFinding[];
-}): DeepReviewRequest {
-  const contexts =
-    input.findings
-      .slice(0, 20)
-      .map((finding) =>
-        sourceContext(
-          input.projectPath,
-          finding,
-        ),
-      )
-      .filter(
-        (
-          context,
-        ): context is SourceContext =>
-          context !== null,
-      );
-
-  return {
-    repository:
-      input.repository,
-    frameworks:
-      input.frameworks,
-    posture:
-      input.posture,
-    findings:
-      input.findings.slice(
-        0,
-        20,
-      ),
-    rootRisks:
-      correlateFindings(
-        input.findings,
-      ).slice(
-        0,
-        20,
-      ),
-    contexts,
-  };
+  return contexts;
 }

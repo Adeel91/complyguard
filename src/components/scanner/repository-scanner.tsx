@@ -1061,6 +1061,14 @@ function Results({
               rootRisks
             }
           />
+
+          {rootRisks.length > 0 && (
+            <DeepReviewWorkflow
+              rootRiskCount={
+                rootRisks.length
+              }
+            />
+          )}
         </>
       )}
 
@@ -1190,6 +1198,155 @@ function Results({
         </div>
       </div>
     </div>
+  );
+}
+
+
+function DeepReviewWorkflow({
+  rootRiskCount,
+}: {
+  rootRiskCount: number;
+}) {
+  const stages = [
+    {
+      number: "01",
+      title: "Deterministic evidence",
+      text:
+        "ComplyGuard finds source backed framework signals and correlates overlapping findings into engineering root risks.",
+    },
+    {
+      number: "02",
+      title: "Kiro Deep Review",
+      text:
+        "Authenticated local Kiro reviews only the supplied root risks with bounded repository context.",
+    },
+    {
+      number: "03",
+      title: "Developer remediation",
+      text:
+        "The developer accepts, adapts or rejects contextual remediation guidance before changing the source.",
+    },
+    {
+      number: "04",
+      title: "Deterministic verification",
+      text:
+        "Fresh before and after scans classify evidence as resolved, persisting or introduced.",
+    },
+  ];
+
+  return (
+    <section className="py-24">
+      <div className="cg-fade-line" />
+
+      <div className="grid gap-14 pt-16 lg:grid-cols-[0.42fr_0.58fr]">
+        <div>
+          <div className="cg-eyebrow">
+            Review and verification
+          </div>
+
+          <h2 className="cg-heading mt-6 max-w-[560px] text-[38px] text-white md:text-[48px]">
+            Context after evidence.
+            <br />
+
+            <span className="text-white/27">
+              Proof after remediation.
+            </span>
+          </h2>
+
+          <p className="mt-6 max-w-[520px] text-[13px] leading-7 text-white/35">
+            {rootRiskCount}{" "}
+            {rootRiskCount === 1
+              ? "grounded engineering risk is"
+              : "grounded engineering risks are"}{" "}
+            available for contextual review. Kiro does not replace the
+            deterministic scanner and does not decide whether its own
+            remediation worked.
+          </p>
+        </div>
+
+        <div className="border-t border-white/[0.07]">
+          {stages.map(
+            (
+              stage,
+              index,
+            ) => (
+              <motion.div
+                key={
+                  stage.number
+                }
+                initial={{
+                  opacity: 0,
+                  y: 12,
+                }}
+                whileInView={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                viewport={{
+                  once: true,
+                }}
+                transition={{
+                  delay:
+                    index *
+                    0.05,
+                }}
+                className="grid gap-3 border-b border-white/[0.07] py-6 md:grid-cols-[52px_190px_1fr]"
+              >
+                <div className="text-[10px] text-[#a98cff]/58">
+                  {
+                    stage.number
+                  }
+                </div>
+
+                <div className="text-[12px] font-semibold text-white/67">
+                  {
+                    stage.title
+                  }
+                </div>
+
+                <p className="max-w-[520px] text-[11px] leading-5 text-white/29">
+                  {
+                    stage.text
+                  }
+                </p>
+              </motion.div>
+            ),
+          )}
+        </div>
+      </div>
+
+      <div className="mt-14 grid gap-10 border-l border-[#a98cff]/35 pl-5 lg:grid-cols-2">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.1em] text-[#a98cff]/70">
+            Local authenticated Kiro
+          </div>
+
+          <p className="mt-3 max-w-[560px] text-[11px] leading-5 text-white/30">
+            Deep Review runs through the authenticated local Kiro CLI. The
+            hosted scanner does not simulate this stage.
+          </p>
+
+          <code className="mt-4 block overflow-x-auto text-[10px] leading-5 text-[#7fe1cf]/72">
+            pnpm deep-review ./path/to/project --frameworks gdpr,soc2,iso27001
+          </code>
+        </div>
+
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.1em] text-[#7fe1cf]/65">
+            Fresh deterministic rescan
+          </div>
+
+          <p className="mt-3 max-w-[560px] text-[11px] leading-5 text-white/30">
+            Compare repository states after remediation and report resolved,
+            persisting and introduced evidence with the same scanner engine.
+          </p>
+
+          <code className="mt-4 block overflow-x-auto text-[10px] leading-5 text-[#7fe1cf]/72">
+            pnpm verify-remediation ./before ./after
+          </code>
+        </div>
+      </div>
+    </section>
   );
 }
 

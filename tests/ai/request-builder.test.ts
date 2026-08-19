@@ -5,29 +5,23 @@ import {
 } from "vitest";
 
 import {
-  buildKiroDeepReviewPrompt,
-} from "@/ai/kiro-review-contract";
-
-import type {
-  DeepReviewRequest,
-} from "@/ai/types";
+  buildDeepReviewRequest,
+} from "@/ai/request-builder";
 
 describe(
-  "buildKiroDeepReviewPrompt",
+  "buildDeepReviewRequest",
   () => {
     it(
-      "forces review of supplied root risks without inventing findings",
+      "preserves deterministic evidence and repository intelligence",
       () => {
         const request =
-          {
+          buildDeepReviewRequest({
             repository:
-              "example/repository",
-
-            generatedAt:
-              "2026-08-18T00:00:00.000Z",
+              "demo/vulnerable-app",
 
             frameworks: [
               "gdpr",
+              "soc2",
             ],
 
             repositoryProfile: {
@@ -35,61 +29,69 @@ describe(
                 "typescript",
 
               sourceFileCount:
-                1,
+                4,
 
-              packageFiles: [],
+              packageFiles: [
+                "package.json",
+              ],
 
               technologies: [],
 
               riskSurfaces: [],
 
               sourceAreas: {
-                authentication: [],
+                authentication: [
+                  "src/auth.ts",
+                ],
+
                 api: [],
+
                 database: [],
+
                 payments: [],
+
                 security: [],
               },
             },
 
             posture: {
-              score: 90,
+              score: 79,
 
               frameworks: [],
 
               methodology:
-                "test",
+                "deterministic test methodology",
 
               disclaimer:
-                "not certification",
+                "not compliance certification",
             },
 
             rootRisks: [
               {
                 id:
-                  "risk-123",
+                  "risk-authentication",
 
                 title:
-                  "Test risk",
+                  "Weak authentication token generation",
 
                 severity:
-                  "medium",
+                  "high",
 
                 category:
-                  "other",
+                  "authentication",
 
                 evidence: {
                   file:
-                    "src/test.ts",
+                    "src/auth.ts",
 
                   line:
                     5,
 
                   column:
-                    1,
+                    17,
 
                   snippets: [
-                    "test()",
+                    "Math.random()",
                   ],
                 },
 
@@ -105,10 +107,10 @@ describe(
             contexts: [
               {
                 rootRiskId:
-                  "risk-123",
+                  "risk-authentication",
 
                 file:
-                  "src/test.ts",
+                  "src/auth.ts",
 
                 startLine:
                   1,
@@ -117,46 +119,34 @@ describe(
                   10,
 
                 content:
-                  "5 | test()",
+                  "5 | const token = Math.random();",
               },
             ],
-          } satisfies
-            DeepReviewRequest;
-
-        const prompt =
-          buildKiroDeepReviewPrompt(
-            request,
-          );
+          });
 
         expect(
-          prompt,
-        ).toContain(
-          "Review every supplied rootRiskId exactly once",
+          request.repository,
+        ).toBe(
+          "demo/vulnerable-app",
         );
 
         expect(
-          prompt,
-        ).toContain(
-          "Never create a new root risk",
+          request.rootRisks,
+        ).toHaveLength(
+          1,
         );
 
         expect(
-          prompt,
-        ).toContain(
-          "false-positive",
+          request.contexts[0]
+            ?.rootRiskId,
+        ).toBe(
+          request.rootRisks[0]
+            ?.id,
         );
 
         expect(
-          prompt,
-        ).toContain(
-          "risk-123",
-        );
-
-        expect(
-          prompt,
-        ).toContain(
-          "Return JSON only",
-        );
+          request.generatedAt,
+        ).toBeTruthy();
       },
     );
   },

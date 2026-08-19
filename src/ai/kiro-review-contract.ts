@@ -2,93 +2,147 @@ import type {
   DeepReviewRequest,
 } from "@/ai/types";
 
-export function buildKiroDeepReviewPrompt(
-  request: DeepReviewRequest,
+function serialize(
+  value: unknown,
 ): string {
-  return `You are the deep compliance reasoning layer for ComplyGuard.
+  return JSON.stringify(
+    value,
+    null,
+    2,
+  );
+}
 
-You are reviewing findings that were already produced from real source code by ComplyGuard's deterministic scanner.
+export function buildKiroDeepReviewPrompt(
+  input: DeepReviewRequest,
+): string {
+  return `
+You are the contextual Deep Review stage of ComplyGuard.
 
-Your job is NOT to invent additional findings.
+ComplyGuard is an evidence-first compliance engineering system.
 
-For every supplied finding:
+The deterministic scanner has already produced source evidence and correlated
+framework-specific signals into root engineering risks.
 
-1. inspect the supplied surrounding source context
-2. decide whether the finding is confirmed, likely, a false positive, or needs review
-3. explain the technical reasoning
-4. explain the practical business or audit impact
-5. provide a concrete remediation plan
-6. provide a patch suggestion only when the supplied context is sufficient
+Your responsibility is NOT to discover unrelated vulnerabilities.
 
-Important rules:
+Your responsibility is to review ONLY the supplied root risks using ONLY the
+supplied repository profile, deterministic evidence, framework mappings and
+source context.
 
-Do not claim legal certification.
+IMPORTANT RULES
 
-Do not mark a repository compliant.
+1. Review every supplied rootRiskId exactly once.
 
-Do not invent source code.
+2. Never create a new root risk.
 
-Do not invent controls.
+3. Never invent source code, files, line numbers, controls, frameworks,
+   evidence or repository behavior.
 
-Do not introduce findings without source evidence.
+4. Never claim that the repository is compliant, certified, secure, audit
+   ready, regulatory ready or legally compliant.
 
-A false positive should be explicitly rejected.
+5. A deterministic rule match can still be a false positive. Reject it when
+   the surrounding source context shows that the matched syntax does not
+   represent the engineering risk described by the root risk.
 
-Return strict JSON matching:
+6. Use verdict "confirmed" only when the supplied context directly supports
+   the risk.
+
+7. Use verdict "likely" when the evidence strongly supports the risk but some
+   relevant behavior remains outside the supplied context.
+
+8. Use verdict "false-positive" when the context contradicts the risk or shows
+   that the deterministic signal is benign in this repository context.
+
+9. Use verdict "needs-review" when the supplied context is not sufficient to
+   decide responsibly.
+
+10. confidence must be between 0 and 1.
+
+11. evidenceAdequacy must be exactly one of:
+    "sufficient"
+    "partial"
+    "insufficient"
+
+12. businessImpact must describe the practical engineering or operational
+    consequence. Do not turn it into legal advice.
+
+13. remediationPlan must contain concrete repository-relevant engineering
+    steps.
+
+14. suggestedPatch must be null unless the supplied context is sufficient to
+    propose a technically responsible change.
+
+15. Every review should include suggestedPatch.
+    - Use null when no responsible patch can be proposed.
+    - If a patch is present, file must be one of the supplied source files.
+    - If a patch is present, include a concise rationale when possible.
+    - diff must be a unified diff.
+    - do not modify unrelated code.
+    - do not claim the patch is verified. ComplyGuard verifies remediation
+      later with a deterministic rescan.
+
+16. Return JSON only.
+    No Markdown.
+    No code fences.
+    No commentary before or after the JSON.
+
+EXPECTED RESPONSE SHAPE
 
 {
-  "executiveSummary": "string",
-  "findings": [
+  "executiveSummary": "Short technical summary of the reviewed root risks.",
+  "reviews": [
     {
-      "ruleId": "string",
+      "rootRiskId": "EXACT_ID_FROM_INPUT",
       "verdict": "confirmed | likely | false-positive | needs-review",
       "confidence": 0.0,
-      "reasoning": "string",
-      "businessImpact": "string",
-      "remediationPlan": ["string"],
-      "suggestedPatch": "optional string"
+      "evidenceAdequacy": "sufficient | partial | insufficient",
+      "reasoning": "Technical explanation grounded only in supplied evidence.",
+      "businessImpact": "Concrete engineering or operational consequence.",
+      "remediationPlan": [
+        "Concrete remediation step 1",
+        "Concrete remediation step 2"
+      ],
+      "suggestedPatch": null
     }
   ]
 }
 
-Repository intelligence:
+REPOSITORY
 
-${JSON.stringify(
-  request.repository,
-  null,
-  2,
+${input.repository}
+
+SELECTED FRAMEWORKS
+
+${serialize(
+  input.frameworks,
 )}
 
-Observed engineering posture:
+REPOSITORY PROFILE
 
-${JSON.stringify(
-  request.posture,
-  null,
-  2,
+${serialize(
+  input.repositoryProfile,
 )}
 
-Correlated root risks:
+OBSERVED ENGINEERING POSTURE
 
-${JSON.stringify(
-  request.rootRisks,
-  null,
-  2,
+${serialize(
+  input.posture,
 )}
 
-Deterministic findings:
+CORRELATED ROOT RISKS
 
-${JSON.stringify(
-  request.findings,
-  null,
-  2,
+${serialize(
+  input.rootRisks,
 )}
 
-Relevant source context:
+SOURCE CONTEXT
 
-${JSON.stringify(
-  request.contexts,
-  null,
-  2,
+${serialize(
+  input.contexts,
 )}
-`;
+
+Now review only the supplied correlated root risks and return the strict JSON
+object described above.
+`.trim();
 }
