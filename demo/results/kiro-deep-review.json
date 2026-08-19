@@ -1,0 +1,721 @@
+{
+  "repository": "ComplyGuard vulnerable demo",
+  "generatedAt": "2026-08-19T10:51:30.303Z",
+  "sourceFileCount": 4,
+  "ruleCount": 18,
+  "rawFindingCount": 17,
+  "rootRiskCount": 8,
+  "reviewedRootRiskCount": 8,
+  "posture": {
+    "score": 19,
+    "frameworks": [
+      {
+        "framework": "gdpr",
+        "score": 20,
+        "findingCount": 5,
+        "weightedRisk": 80,
+        "criticalCount": 1,
+        "highCount": 4
+      },
+      {
+        "framework": "soc2",
+        "score": 37,
+        "findingCount": 5,
+        "weightedRisk": 63,
+        "criticalCount": 0,
+        "highCount": 4
+      },
+      {
+        "framework": "iso27001",
+        "score": 0,
+        "findingCount": 7,
+        "weightedRisk": 101,
+        "criticalCount": 1,
+        "highCount": 5
+      }
+    ],
+    "methodology": "Observed engineering posture starts at 100 and subtracts deterministic weights for findings produced by the executed ComplyGuard rules.",
+    "disclaimer": "This score measures only observed engineering risk from the executed rules. It is not a compliance certification, audit opinion, or proof of regulatory readiness."
+  },
+  "reviewedRootRisks": [
+    {
+      "id": "risk_2dffcf0a5bd6bd2c9384",
+      "title": "Authentication or credential handling risk",
+      "severity": "high",
+      "category": "authentication",
+      "evidence": {
+        "file": "demo/vulnerable-app/src/auth.ts",
+        "line": 5,
+        "column": 10,
+        "snippets": [
+          "password === storedPassword"
+        ]
+      },
+      "controls": [
+        {
+          "framework": "gdpr",
+          "control": "GDPR Article 32",
+          "ruleIds": [
+            "GDPR-AUTH-001"
+          ]
+        }
+      ],
+      "rawFindings": [
+        {
+          "ruleId": "GDPR-AUTH-001",
+          "framework": "gdpr",
+          "control": "GDPR Article 32",
+          "severity": "high",
+          "title": "Direct sensitive credential comparison",
+          "description": "A credential appears to be compared directly using equality rather than a dedicated verification mechanism.",
+          "evidence": "password === storedPassword",
+          "remediation": "Use an appropriate credential verification mechanism such as password hashing verification or a constant time secret comparison.",
+          "location": {
+            "file": "demo/vulnerable-app/src/auth.ts",
+            "line": 5,
+            "column": 10
+          }
+        }
+      ],
+      "signalCount": 1
+    },
+    {
+      "id": "risk_f3ca81819e7d31f8cdca",
+      "title": "Authentication or credential handling risk",
+      "severity": "high",
+      "category": "authentication",
+      "evidence": {
+        "file": "demo/vulnerable-app/src/auth.ts",
+        "line": 9,
+        "column": 9,
+        "snippets": [
+          "accessToken =\n    Math.random().toString(36)"
+        ]
+      },
+      "controls": [
+        {
+          "framework": "gdpr",
+          "control": "GDPR Article 32",
+          "ruleIds": [
+            "GDPR-SEC-002"
+          ]
+        },
+        {
+          "framework": "soc2",
+          "control": "SOC 2 CC6.1",
+          "ruleIds": [
+            "SOC2-AUTH-001"
+          ]
+        },
+        {
+          "framework": "iso27001",
+          "control": "ISO 27001:2022 A.8.24, A.8.28",
+          "ruleIds": [
+            "ISO27001-RANDOM-001"
+          ]
+        }
+      ],
+      "rawFindings": [
+        {
+          "ruleId": "GDPR-SEC-002",
+          "framework": "gdpr",
+          "control": "GDPR Article 32",
+          "severity": "high",
+          "title": "Insecure randomness used for security sensitive value",
+          "description": "Math.random is not cryptographically secure and appears to be used to generate a security sensitive value.",
+          "evidence": "accessToken =\n    Math.random().toString(36)",
+          "remediation": "Use crypto.randomUUID, crypto.randomBytes, Web Crypto getRandomValues, or another cryptographically secure random generator.",
+          "location": {
+            "file": "demo/vulnerable-app/src/auth.ts",
+            "line": 9,
+            "column": 9
+          }
+        },
+        {
+          "ruleId": "SOC2-AUTH-001",
+          "framework": "soc2",
+          "control": "SOC 2 CC6.1",
+          "severity": "high",
+          "title": "Weak randomness used for security value",
+          "description": "Math.random is being used to generate a security sensitive value and is not cryptographically secure.",
+          "evidence": "accessToken =\n    Math.random().toString(36)",
+          "remediation": "Use a cryptographically secure random generator such as crypto.randomUUID or crypto.randomBytes.",
+          "location": {
+            "file": "demo/vulnerable-app/src/auth.ts",
+            "line": 9,
+            "column": 9
+          }
+        },
+        {
+          "ruleId": "ISO27001-RANDOM-001",
+          "framework": "iso27001",
+          "control": "ISO 27001:2022 A.8.24, A.8.28",
+          "severity": "high",
+          "title": "Weak randomness used for security value",
+          "description": "Math.random appears to generate a security sensitive value.",
+          "evidence": "accessToken =\n    Math.random().toString(36)",
+          "remediation": "Use a cryptographically secure random generator such as crypto.randomUUID or crypto.randomBytes.",
+          "location": {
+            "file": "demo/vulnerable-app/src/auth.ts",
+            "line": 9,
+            "column": 9
+          }
+        }
+      ],
+      "signalCount": 3
+    },
+    {
+      "id": "risk_3564872b45507d6a80dd",
+      "title": "Weak cryptographic practice",
+      "severity": "high",
+      "category": "cryptography",
+      "evidence": {
+        "file": "demo/vulnerable-app/src/security.ts",
+        "line": 8,
+        "column": 10,
+        "snippets": [
+          "createHash(\"md5\")"
+        ]
+      },
+      "controls": [
+        {
+          "framework": "iso27001",
+          "control": "ISO 27001:2022 A.8.24",
+          "ruleIds": [
+            "ISO27001-CRYPTO-001"
+          ]
+        }
+      ],
+      "rawFindings": [
+        {
+          "ruleId": "ISO27001-CRYPTO-001",
+          "framework": "iso27001",
+          "control": "ISO 27001:2022 A.8.24",
+          "severity": "high",
+          "title": "Weak cryptographic hash algorithm",
+          "description": "A security sensitive operation uses a cryptographic hash that is unsuitable for modern security use.",
+          "evidence": "createHash(\"md5\")",
+          "remediation": "Use a modern approved algorithm appropriate to the use case.",
+          "location": {
+            "file": "demo/vulnerable-app/src/security.ts",
+            "line": 8,
+            "column": 10
+          }
+        }
+      ],
+      "signalCount": 1
+    },
+    {
+      "id": "risk_9312c5012eaa2de2dc57",
+      "title": "Insecure transport or TLS configuration",
+      "severity": "critical",
+      "category": "transport",
+      "evidence": {
+        "file": "demo/vulnerable-app/src/security.ts",
+        "line": 14,
+        "column": 3,
+        "snippets": [
+          "rejectUnauthorized: false"
+        ]
+      },
+      "controls": [
+        {
+          "framework": "iso27001",
+          "control": "ISO 27001:2022 A.8.20, A.8.24",
+          "ruleIds": [
+            "ISO27001-TLS-001"
+          ]
+        }
+      ],
+      "rawFindings": [
+        {
+          "ruleId": "ISO27001-TLS-001",
+          "framework": "iso27001",
+          "control": "ISO 27001:2022 A.8.20, A.8.24",
+          "severity": "critical",
+          "title": "TLS verification explicitly disabled",
+          "description": "TLS certificate validation is explicitly disabled.",
+          "evidence": "rejectUnauthorized: false",
+          "remediation": "Restore certificate verification and configure trusted certificate authorities correctly.",
+          "location": {
+            "file": "demo/vulnerable-app/src/security.ts",
+            "line": 14,
+            "column": 3
+          }
+        }
+      ],
+      "signalCount": 1
+    },
+    {
+      "id": "risk_d96131766f4fe607de6e",
+      "title": "Sensitive data exposure through logging",
+      "severity": "high",
+      "category": "logging",
+      "evidence": {
+        "file": "demo/vulnerable-app/src/users.ts",
+        "line": 10,
+        "column": 3,
+        "snippets": [
+          "console.log(user.email)"
+        ]
+      },
+      "controls": [
+        {
+          "framework": "gdpr",
+          "control": "GDPR Article 5(1)(c), Article 32",
+          "ruleIds": [
+            "GDPR-LOG-001"
+          ]
+        },
+        {
+          "framework": "soc2",
+          "control": "SOC 2 CC7.2",
+          "ruleIds": [
+            "SOC2-LOG-001"
+          ]
+        },
+        {
+          "framework": "iso27001",
+          "control": "ISO 27001:2022 A.8.15",
+          "ruleIds": [
+            "ISO27001-LOG-001"
+          ]
+        }
+      ],
+      "rawFindings": [
+        {
+          "ruleId": "GDPR-LOG-001",
+          "framework": "gdpr",
+          "control": "GDPR Article 5(1)(c), Article 32",
+          "severity": "high",
+          "title": "Sensitive data written to console",
+          "description": "A console statement appears to include personal or sensitive data. Application logs may persist beyond the original processing purpose and may be accessible to additional operators or systems.",
+          "evidence": "console.log(user.email)",
+          "remediation": "Remove the sensitive value from the log, redact it, or log only a non sensitive identifier required for operational diagnostics.",
+          "location": {
+            "file": "demo/vulnerable-app/src/users.ts",
+            "line": 10,
+            "column": 3
+          }
+        },
+        {
+          "ruleId": "SOC2-LOG-001",
+          "framework": "soc2",
+          "control": "SOC 2 CC7.2",
+          "severity": "high",
+          "title": "Sensitive data exposed through debug output",
+          "description": "Sensitive or personal information appears to be written to application logs.",
+          "evidence": "console.log(user.email)",
+          "remediation": "Remove sensitive values from logs or replace them with redacted or non sensitive identifiers.",
+          "location": {
+            "file": "demo/vulnerable-app/src/users.ts",
+            "line": 10,
+            "column": 3
+          }
+        },
+        {
+          "ruleId": "ISO27001-LOG-001",
+          "framework": "iso27001",
+          "control": "ISO 27001:2022 A.8.15",
+          "severity": "high",
+          "title": "Sensitive information written to logs",
+          "description": "Application logging appears to include sensitive or personal information.",
+          "evidence": "console.log(user.email)",
+          "remediation": "Redact sensitive values and log only the minimum operational information required.",
+          "location": {
+            "file": "demo/vulnerable-app/src/users.ts",
+            "line": 10,
+            "column": 3
+          }
+        }
+      ],
+      "signalCount": 3
+    },
+    {
+      "id": "risk_efb5292c45a3aee21209",
+      "title": "Sensitive data exposure through logging",
+      "severity": "high",
+      "category": "logging",
+      "evidence": {
+        "file": "demo/vulnerable-app/src/users.ts",
+        "line": 11,
+        "column": 3,
+        "snippets": [
+          "console.info(user.address)"
+        ]
+      },
+      "controls": [
+        {
+          "framework": "gdpr",
+          "control": "GDPR Article 5(1)(c), Article 32",
+          "ruleIds": [
+            "GDPR-LOG-001"
+          ]
+        },
+        {
+          "framework": "soc2",
+          "control": "SOC 2 CC7.2",
+          "ruleIds": [
+            "SOC2-LOG-001"
+          ]
+        },
+        {
+          "framework": "iso27001",
+          "control": "ISO 27001:2022 A.8.15",
+          "ruleIds": [
+            "ISO27001-LOG-001"
+          ]
+        }
+      ],
+      "rawFindings": [
+        {
+          "ruleId": "GDPR-LOG-001",
+          "framework": "gdpr",
+          "control": "GDPR Article 5(1)(c), Article 32",
+          "severity": "high",
+          "title": "Sensitive data written to console",
+          "description": "A console statement appears to include personal or sensitive data. Application logs may persist beyond the original processing purpose and may be accessible to additional operators or systems.",
+          "evidence": "console.info(user.address)",
+          "remediation": "Remove the sensitive value from the log, redact it, or log only a non sensitive identifier required for operational diagnostics.",
+          "location": {
+            "file": "demo/vulnerable-app/src/users.ts",
+            "line": 11,
+            "column": 3
+          }
+        },
+        {
+          "ruleId": "SOC2-LOG-001",
+          "framework": "soc2",
+          "control": "SOC 2 CC7.2",
+          "severity": "high",
+          "title": "Sensitive data exposed through debug output",
+          "description": "Sensitive or personal information appears to be written to application logs.",
+          "evidence": "console.info(user.address)",
+          "remediation": "Remove sensitive values from logs or replace them with redacted or non sensitive identifiers.",
+          "location": {
+            "file": "demo/vulnerable-app/src/users.ts",
+            "line": 11,
+            "column": 3
+          }
+        },
+        {
+          "ruleId": "ISO27001-LOG-001",
+          "framework": "iso27001",
+          "control": "ISO 27001:2022 A.8.15",
+          "severity": "high",
+          "title": "Sensitive information written to logs",
+          "description": "Application logging appears to include sensitive or personal information.",
+          "evidence": "console.info(user.address)",
+          "remediation": "Redact sensitive values and log only the minimum operational information required.",
+          "location": {
+            "file": "demo/vulnerable-app/src/users.ts",
+            "line": 11,
+            "column": 3
+          }
+        }
+      ],
+      "signalCount": 3
+    },
+    {
+      "id": "risk_b52cf194fca5f8d7f794",
+      "title": "Insecure transport or TLS configuration",
+      "severity": "critical",
+      "category": "transport",
+      "evidence": {
+        "file": "demo/vulnerable-app/src/users.ts",
+        "line": 13,
+        "column": 10,
+        "snippets": [
+          "fetch(\n    \"http://example.com/users\",\n    {\n      method: \"POST\",\n      body: JSON.stringify({\n        email: user.email,\n      }),\n    },\n  )"
+        ]
+      },
+      "controls": [
+        {
+          "framework": "gdpr",
+          "control": "GDPR Article 32",
+          "ruleIds": [
+            "GDPR-TRANS-001"
+          ]
+        },
+        {
+          "framework": "soc2",
+          "control": "SOC 2 CC6.7",
+          "ruleIds": [
+            "SOC2-TRANS-001"
+          ]
+        },
+        {
+          "framework": "iso27001",
+          "control": "ISO 27001:2022 A.8.20, A.8.24",
+          "ruleIds": [
+            "ISO27001-NET-001"
+          ]
+        }
+      ],
+      "rawFindings": [
+        {
+          "ruleId": "GDPR-TRANS-001",
+          "framework": "gdpr",
+          "control": "GDPR Article 32",
+          "severity": "critical",
+          "title": "Potential personal data sent over insecure HTTP",
+          "description": "A request to an unencrypted HTTP endpoint appears to include personal or sensitive data.",
+          "evidence": "fetch(\n    \"http://example.com/users\",\n    {\n      method: \"POST\",\n      body: JSON.stringify({\n        email: user.email,\n      }),\n    },\n  )",
+          "remediation": "Use HTTPS and verify that the remote service has appropriate transport security and data processing controls.",
+          "location": {
+            "file": "demo/vulnerable-app/src/users.ts",
+            "line": 13,
+            "column": 10
+          }
+        },
+        {
+          "ruleId": "SOC2-TRANS-001",
+          "framework": "soc2",
+          "control": "SOC 2 CC6.7",
+          "severity": "high",
+          "title": "Unencrypted HTTP communication",
+          "description": "The application communicates with a remote endpoint using unencrypted HTTP.",
+          "evidence": "fetch(\n    \"http://example.com/users\",\n    {\n      method: \"POST\",\n      body: JSON.stringify({\n        email: user.email,\n      }),\n    },\n  )",
+          "remediation": "Use HTTPS for remote communication and validate the security configuration of the destination service.",
+          "location": {
+            "file": "demo/vulnerable-app/src/users.ts",
+            "line": 13,
+            "column": 10
+          }
+        },
+        {
+          "ruleId": "ISO27001-NET-001",
+          "framework": "iso27001",
+          "control": "ISO 27001:2022 A.8.20, A.8.24",
+          "severity": "high",
+          "title": "Unencrypted remote communication",
+          "description": "The application communicates with a remote service over unencrypted HTTP.",
+          "evidence": "fetch(\n    \"http://example.com/users\",\n    {\n      method: \"POST\",\n      body: JSON.stringify({\n        email: user.email,\n      }),\n    },\n  )",
+          "remediation": "Use HTTPS with certificate validation for remote communications.",
+          "location": {
+            "file": "demo/vulnerable-app/src/users.ts",
+            "line": 13,
+            "column": 10
+          }
+        }
+      ],
+      "signalCount": 3
+    },
+    {
+      "id": "risk_c6b2a2d0736a55466783",
+      "title": "Missing audit trail for privileged action",
+      "severity": "medium",
+      "category": "audit",
+      "evidence": {
+        "file": "demo/vulnerable-app/src/users.ts",
+        "line": 24,
+        "column": 1,
+        "snippets": [
+          "export async function deleteUser(\n  userId: string,\n) {\n  return databaseDelete(\n    userId,\n  );\n}"
+        ]
+      },
+      "controls": [
+        {
+          "framework": "soc2",
+          "control": "SOC 2 CC7.2",
+          "ruleIds": [
+            "SOC2-AUDIT-001"
+          ]
+        },
+        {
+          "framework": "iso27001",
+          "control": "ISO 27001:2022 A.8.15",
+          "ruleIds": [
+            "ISO27001-AUDIT-001"
+          ]
+        }
+      ],
+      "rawFindings": [
+        {
+          "ruleId": "SOC2-AUDIT-001",
+          "framework": "soc2",
+          "control": "SOC 2 CC7.2",
+          "severity": "medium",
+          "title": "Privileged action without visible audit event",
+          "description": "A privileged operation was detected without a visible audit event in the same function.",
+          "evidence": "export async function deleteUser(\n  userId: string,\n) {\n  return databaseDelete(\n    userId,\n  );\n}",
+          "remediation": "Record a structured audit event containing the actor, action, target, timestamp, and outcome.",
+          "location": {
+            "file": "demo/vulnerable-app/src/users.ts",
+            "line": 24,
+            "column": 1
+          }
+        },
+        {
+          "ruleId": "ISO27001-AUDIT-001",
+          "framework": "iso27001",
+          "control": "ISO 27001:2022 A.8.15",
+          "severity": "medium",
+          "title": "Privileged action without visible audit event",
+          "description": "A privileged operation was found without a visible audit event in the same function.",
+          "evidence": "export async function deleteUser(\n  userId: string,\n) {\n  return databaseDelete(\n    userId,\n  );\n}",
+          "remediation": "Record a structured audit event containing actor, action, target, timestamp and outcome.",
+          "location": {
+            "file": "demo/vulnerable-app/src/users.ts",
+            "line": 24,
+            "column": 1
+          }
+        }
+      ],
+      "signalCount": 2
+    }
+  ],
+  "review": {
+    "provider": "kiro-headless",
+    "reviewedAt": "2026-08-19T10:52:45.282Z",
+    "executiveSummary": "All 8 supplied root risks are confirmed as genuine engineering risks. The vulnerable demo application exhibits plaintext credential comparison, cryptographically weak token generation using Math.random, MD5 hashing of personal data, disabled TLS certificate verification, logging of personal data fields, transmission of personal data over unencrypted HTTP, and a privileged delete operation with no audit trail. Each risk is directly observable in the supplied source with no mitigating context found.",
+    "reviews": [
+      {
+        "rootRiskId": "risk_2dffcf0a5bd6bd2c9384",
+        "verdict": "confirmed",
+        "confidence": 0.97,
+        "evidenceAdequacy": "sufficient",
+        "reasoning": "The authenticate function at line 5 of src/auth.ts performs a direct equality comparison (===) between a plaintext password parameter and a storedPassword parameter. There is no hashing, no bcrypt/scrypt/argon2 verification, and no constant-time comparison. The function signature and body confirm that passwords are compared as raw strings, indicating credentials are likely stored and transmitted in plaintext.",
+        "businessImpact": "Plaintext password comparison means the application either stores passwords unhashed or expects them in cleartext. This enables credential theft from database dumps, timing side-channel attacks on the equality operator, and fails to meet minimum authentication security expectations for any framework handling personal data.",
+        "remediationPlan": [
+          "Replace direct equality comparison with a password hashing verification function such as bcrypt.compare or argon2.verify.",
+          "Ensure stored passwords are hashed before persistence using an appropriate work-factor algorithm.",
+          "If the comparison must remain string-based for non-password secrets, use crypto.timingSafeEqual to prevent timing attacks."
+        ],
+        "suggestedPatch": {
+          "file": "src/auth.ts",
+          "rationale": "Replace plaintext comparison with bcrypt.compare for proper password verification. This requires passwords to be stored as bcrypt hashes.",
+          "diff": "--- a/src/auth.ts\n+++ b/src/auth.ts\n@@ -1,6 +1,8 @@\n-export function authenticate(\n+import { compare } from \"bcrypt\";\n+\n+export async function authenticate(\n   password: string,\n   storedPassword: string,\n ) {\n-  return password === storedPassword;\n+  return compare(password, storedPassword);\n }"
+        }
+      },
+      {
+        "rootRiskId": "risk_f3ca81819e7d31f8cdca",
+        "verdict": "confirmed",
+        "confidence": 0.99,
+        "evidenceAdequacy": "sufficient",
+        "reasoning": "The createAccessToken function at lines 8-13 of src/auth.ts generates an access token using Math.random().toString(36). Math.random is not cryptographically secure; its output is predictable and can be reconstructed by an attacker who observes sufficient outputs or knows the internal PRNG state. The variable is explicitly named accessToken, confirming security-sensitive intent.",
+        "businessImpact": "Access tokens generated with Math.random are predictable. An attacker can forge valid session tokens, impersonate users, escalate privileges, or bypass authentication entirely. This undermines all access control guarantees in the application.",
+        "remediationPlan": [
+          "Replace Math.random().toString(36) with a cryptographically secure random generator.",
+          "Use crypto.randomBytes(32).toString('hex') or crypto.randomUUID() from the Node.js crypto module.",
+          "Ensure the generated token has sufficient entropy (at least 128 bits) for session security."
+        ],
+        "suggestedPatch": {
+          "file": "src/auth.ts",
+          "rationale": "Replace Math.random with crypto.randomBytes for cryptographically secure token generation.",
+          "diff": "--- a/src/auth.ts\n+++ b/src/auth.ts\n@@ -1,3 +1,5 @@\n+import { randomBytes } from \"node:crypto\";\n+\n export function authenticate(\n   password: string,\n   storedPassword: string,\n@@ -6,7 +8,7 @@\n }\n \n export function createAccessToken() {\n-  const accessToken =\n-    Math.random().toString(36);\n+  const accessToken =\n+    randomBytes(32).toString(\"hex\");\n \n   return accessToken;\n }"
+        }
+      },
+      {
+        "rootRiskId": "risk_3564872b45507d6a80dd",
+        "verdict": "confirmed",
+        "confidence": 0.97,
+        "evidenceAdequacy": "sufficient",
+        "reasoning": "The insecureHash function at line 8 of src/security.ts uses createHash('md5') to hash an email address. MD5 is cryptographically broken with known collision attacks and preimage weaknesses. The function is applied to personal data (email), suggesting it may be used for integrity checking, deduplication, or pseudonymization — all use cases where MD5 provides inadequate security guarantees.",
+        "businessImpact": "MD5 hashes of email addresses can be reversed using rainbow tables or brute force due to the limited entropy of email address formats. If used for pseudonymization, it fails to protect personal data. If used for integrity verification, collisions can be crafted. This weakens data protection and cryptographic assurance.",
+        "remediationPlan": [
+          "Replace MD5 with SHA-256 or SHA-3 for general hashing purposes.",
+          "If the hash is used for pseudonymization of personal data, use HMAC with a secret key or a dedicated pseudonymization function.",
+          "If the hash is used for password-like verification, use a purpose-built KDF instead."
+        ],
+        "suggestedPatch": {
+          "file": "src/security.ts",
+          "rationale": "Replace md5 with sha256 as a minimum secure hash algorithm for the use case.",
+          "diff": "--- a/src/security.ts\n+++ b/src/security.ts\n@@ -5,7 +5,7 @@\n export function insecureHash(\n   email: string,\n ) {\n-  return createHash(\"md5\")\n+  return createHash(\"sha256\")\n     .update(email)\n     .digest(\"hex\");\n }"
+        }
+      },
+      {
+        "rootRiskId": "risk_9312c5012eaa2de2dc57",
+        "verdict": "confirmed",
+        "confidence": 0.99,
+        "evidenceAdequacy": "sufficient",
+        "reasoning": "The exported tlsOptions object at line 13-15 of src/security.ts explicitly sets rejectUnauthorized: false. This disables TLS certificate verification for any HTTPS client that consumes these options. The object is exported, meaning it is intended for use by other modules. There is no conditional logic, environment check, or comment indicating this is limited to development or testing.",
+        "businessImpact": "Disabling TLS certificate verification allows man-in-the-middle attacks on any connection using these options. An attacker on the network path can intercept, read, and modify encrypted traffic including authentication tokens, personal data, and payment information. This nullifies the confidentiality and integrity guarantees of TLS.",
+        "remediationPlan": [
+          "Remove rejectUnauthorized: false from the TLS options.",
+          "If custom certificate authorities are needed, configure the ca option with the appropriate trusted certificates instead of disabling verification.",
+          "If this setting exists for local development only, gate it behind a strict environment check and ensure it cannot reach production."
+        ],
+        "suggestedPatch": {
+          "file": "src/security.ts",
+          "rationale": "Remove the insecure TLS option. If custom CAs are needed, they should be configured explicitly.",
+          "diff": "--- a/src/security.ts\n+++ b/src/security.ts\n@@ -11,4 +11,4 @@\n }\n \n export const tlsOptions = {\n-  rejectUnauthorized: false,\n+  rejectUnauthorized: true,\n };"
+        }
+      },
+      {
+        "rootRiskId": "risk_d96131766f4fe607de6e",
+        "verdict": "confirmed",
+        "confidence": 0.95,
+        "evidenceAdequacy": "sufficient",
+        "reasoning": "Line 10 of src/users.ts contains console.log(user.email) where user is typed as User with an email field representing personal data. The email address is written directly to stdout with no redaction. Application logs in production environments are typically persisted, aggregated, and accessible to operations staff, creating an uncontrolled copy of personal data outside the primary data store.",
+        "businessImpact": "Personal email addresses appearing in application logs create uncontrolled data copies that persist beyond their processing purpose, may be accessible to unauthorized personnel, and complicate data subject deletion requests. Log aggregation services may retain this data indefinitely in jurisdictions without adequate protection.",
+        "remediationPlan": [
+          "Remove the console.log statement if it serves no operational purpose.",
+          "If operational logging is required, log only a non-sensitive identifier such as user.id.",
+          "If the email must appear for debugging, redact it (e.g., m***@example.com) or use a structured logger with PII filtering."
+        ],
+        "suggestedPatch": {
+          "file": "src/users.ts",
+          "rationale": "Replace personal data logging with a non-sensitive user identifier.",
+          "diff": "--- a/src/users.ts\n+++ b/src/users.ts\n@@ -7,8 +7,8 @@\n export async function sendUser(\n   user: User,\n ) {\n-  console.log(user.email);\n-  console.info(user.address);\n+  console.log(\"Sending user:\", user.id);\n+  console.info(\"User send initiated for:\", user.id);\n \n   return fetch(\n     \"http://example.com/users\","
+        }
+      },
+      {
+        "rootRiskId": "risk_efb5292c45a3aee21209",
+        "verdict": "confirmed",
+        "confidence": 0.95,
+        "evidenceAdequacy": "sufficient",
+        "reasoning": "Line 11 of src/users.ts contains console.info(user.address) where user.address is a personal data field representing a physical address. This is logged unconditionally to stdout with no redaction, creating an uncontrolled copy of sensitive personal information in application logs.",
+        "businessImpact": "Physical addresses in logs represent sensitive personal data exposure. Logs are often retained longer than application data, replicated across monitoring systems, and accessible to wider teams than the primary database. This creates compliance risk for data minimization and purpose limitation principles.",
+        "remediationPlan": [
+          "Remove the console.info statement or replace the personal data with a non-sensitive identifier.",
+          "If address logging is operationally necessary, redact it to a partial form or log only a hashed reference.",
+          "Implement a structured logging library with automatic PII redaction for sensitive fields."
+        ],
+        "suggestedPatch": {
+          "file": "src/users.ts",
+          "rationale": "This patch is combined with risk_d96131766f4fe607de6e above — both logging statements are replaced with non-sensitive identifiers in the same patch. See the suggested patch for risk_d96131766f4fe607de6e which addresses both lines 10 and 11.",
+          "diff": "--- a/src/users.ts\n+++ b/src/users.ts\n@@ -7,8 +7,8 @@\n export async function sendUser(\n   user: User,\n ) {\n-  console.log(user.email);\n-  console.info(user.address);\n+  console.log(\"Sending user:\", user.id);\n+  console.info(\"User send initiated for:\", user.id);\n \n   return fetch(\n     \"http://example.com/users\","
+        }
+      },
+      {
+        "rootRiskId": "risk_b52cf194fca5f8d7f794",
+        "verdict": "confirmed",
+        "confidence": 0.98,
+        "evidenceAdequacy": "sufficient",
+        "reasoning": "Lines 13-21 of src/users.ts perform a fetch POST to http://example.com/users with a JSON body containing user.email. The URL uses plaintext HTTP (not HTTPS). The request body contains personal data (email address). There is no indication this is a test-only URL or that transport security is applied at a different layer. The combination of personal data and unencrypted transport is a direct data-in-transit exposure.",
+        "businessImpact": "Personal data (email addresses) transmitted over unencrypted HTTP can be intercepted by any network observer between the application and the remote endpoint. This enables mass data harvesting, targeted attacks on users, and violates the principle of protecting personal data in transit. In shared or cloud network environments, this risk is particularly acute.",
+        "remediationPlan": [
+          "Change the URL scheme from http:// to https://.",
+          "Validate that the remote endpoint supports TLS with a valid certificate.",
+          "Consider adding certificate pinning or mutual TLS for sensitive data exchanges.",
+          "Ensure no HTTP fallback is configured in the application's HTTP client."
+        ],
+        "suggestedPatch": {
+          "file": "src/users.ts",
+          "rationale": "Switch from HTTP to HTTPS to encrypt personal data in transit.",
+          "diff": "--- a/src/users.ts\n+++ b/src/users.ts\n@@ -11,7 +11,7 @@\n \n   return fetch(\n-    \"http://example.com/users\",\n+    \"https://example.com/users\",\n     {\n       method: \"POST\",\n       body: JSON.stringify({"
+        }
+      },
+      {
+        "rootRiskId": "risk_c6b2a2d0736a55466783",
+        "verdict": "confirmed",
+        "confidence": 0.93,
+        "evidenceAdequacy": "sufficient",
+        "reasoning": "The deleteUser function at lines 24-30 of src/users.ts performs a database deletion via databaseDelete(userId) and returns directly without any logging, audit event emission, or record of who performed the deletion, when, or why. The function accepts only a userId with no actor context. The internal databaseDelete function (lines 32-36) is a stub that simply returns the userId, confirming no audit logic exists anywhere in the call chain.",
+        "businessImpact": "Deletion of user records without an audit trail means the organization cannot demonstrate who deleted data, when, or whether the deletion was authorized. This undermines accountability, incident investigation, and regulatory response capabilities. For a database-backed application handling personal and payment data, unaudited destructive operations represent a significant operational governance gap.",
+        "remediationPlan": [
+          "Add an audit event before or after the delete operation recording: actor identity, action performed, target resource, timestamp, and outcome.",
+          "Extend the function signature to accept an actor or context parameter so the audit trail captures who initiated the deletion.",
+          "Use a structured audit logging mechanism that persists independently of the application database to prevent audit log tampering.",
+          "Consider soft-delete patterns to allow recovery and forensic investigation."
+        ],
+        "suggestedPatch": {
+          "file": "src/users.ts",
+          "rationale": "Add a minimal audit log event capturing the actor and action. The function signature is extended to require actor context.",
+          "diff": "--- a/src/users.ts\n+++ b/src/users.ts\n@@ -23,8 +23,16 @@\n \n export async function deleteUser(\n   userId: string,\n+  actor: string,\n ) {\n+  console.info(JSON.stringify({\n+    event: \"user.deleted\",\n+    actor,\n+    target: userId,\n+    timestamp: new Date().toISOString(),\n+  }));\n+\n   return databaseDelete(\n     userId,\n   );\n }"
+        }
+      }
+    ]
+  }
+}
