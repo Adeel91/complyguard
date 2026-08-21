@@ -1,5 +1,6 @@
 "use client";
 
+import { HostedDeepReviewPanel } from "@/components/scanner/hosted-deep-review-panel";
 import {
   useMemo,
   useState,
@@ -749,6 +750,9 @@ export function RepositoryScanner() {
                   result={
                     result
                   }
+                  repositoryUrl={
+                    repositoryUrl
+                  }
                   findings={
                     filteredFindings
                   }
@@ -932,6 +936,7 @@ function LoadingExperience() {
 
 function Results({
   result,
+  repositoryUrl,
   findings,
   frameworkFilter,
   severityFilter,
@@ -942,6 +947,9 @@ function Results({
 }: {
   result:
     ScanResponse;
+
+  repositoryUrl:
+    string;
 
   findings:
     ComplianceFinding[];
@@ -1063,11 +1071,25 @@ function Results({
           />
 
           {rootRisks.length > 0 && (
-            <DeepReviewWorkflow
-              rootRiskCount={
-                rootRisks.length
-              }
-            />
+            <>
+              <DeepReviewWorkflow
+                rootRiskCount={
+                  rootRisks.length
+                }
+              />
+
+              <HostedDeepReviewPanel
+                repositoryUrl={
+                  repositoryUrl
+                }
+                frameworks={
+                  result.frameworks
+                }
+                rootRiskCount={
+                  rootRisks.length
+                }
+              />
+            </>
           )}
         </>
       )}
@@ -1218,7 +1240,7 @@ function DeepReviewWorkflow({
       number: "02",
       title: "Kiro Deep Review",
       text:
-        "Authenticated local Kiro reviews only the supplied root risks with bounded repository context.",
+        "Authenticated Kiro reviews only the supplied root risks with bounded repository context.",
     },
     {
       number: "03",

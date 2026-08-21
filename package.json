@@ -16,7 +16,8 @@
     "deep-review": "tsx src/cli/deep-review.ts",
     "verify-remediation": "tsx src/cli/verify-remediation.ts",
     "deep-review:demo": "tsx src/cli/deep-review.ts demo/vulnerable-app --repository \"ComplyGuard vulnerable demo\" --frameworks gdpr,soc2,iso27001 --max-risks 8",
-    "deep-review:demo:prompt": "tsx src/cli/deep-review.ts demo/vulnerable-app --repository \"ComplyGuard vulnerable demo\" --frameworks gdpr,soc2,iso27001 --max-risks 8 --prompt-only"
+    "deep-review:demo:prompt": "tsx src/cli/deep-review.ts demo/vulnerable-app --repository \"ComplyGuard vulnerable demo\" --frameworks gdpr,soc2,iso27001 --max-risks 8 --prompt-only",
+    "worker:kiro": "tsx src/worker/kiro-worker.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
